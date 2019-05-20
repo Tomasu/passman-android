@@ -236,7 +236,7 @@ public class LoginActivity extends AppCompatActivity
         //i.setFlags( Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS );
         c.startActivity(i);
     }
-    
+
 
     @Override
     protected
