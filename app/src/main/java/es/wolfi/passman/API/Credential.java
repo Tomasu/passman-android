@@ -22,21 +22,31 @@
 
 package es.wolfi.passman.API;
 
-import android.util.Log;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.annotations.SerializedName;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.lang.reflect.Type;
 
 import es.wolfi.utils.Filterable;
+import es.wolfi.utils.JSONUtils;
+import timber.log.Timber;
 
-public class Credential extends Core implements Filterable {
+public class Credential implements Filterable {
+    @SerializedName( "credential_id" )
     public int id;
 
-
-
     protected String guid;
+
+    @SerializedName( "vault_id" )
     protected int vaultId;
+
+    @SerializedName( "user_id" )
     protected String userId;
+
     protected String label;
     protected String description;
     protected long created;
@@ -46,17 +56,29 @@ public class Credential extends Core implements Filterable {
     protected String username;
     protected String password;
     protected String url;
-    protected String favicon;
+    protected Icon favicon;
+
+    @SerializedName( "renew_interval" )
     protected long renewInterval;
+
+    @SerializedName( "expire_time" )
     protected long expireTime;
+
+    @SerializedName( "delete_time" )
     protected long deleteTime;
+
     protected String files;
+
+    @SerializedName( "custom_fields" )
     protected String customFields;
+
     protected String otp;
     protected int hidden;
+
+    @SerializedName( "shared_key" )
     protected String sharedKey;
 
-    protected Vault vault;
+    protected transient Vault vault;
 
     public int getId() {
         return id;
@@ -119,10 +141,13 @@ public class Credential extends Core implements Filterable {
     }
 
     public String getUsername() {
-        return vault.decryptString(username);
+        String decrypted = vault.decryptString( username );
+        Timber.d( "getUsername: %s / %s", username, decrypted );
+        return decrypted;
     }
 
     public void setUsername(String username) {
+        Timber.d( "setUsername: %s", username );
         this.username = vault.encryptString(username);
     }
 
@@ -142,11 +167,11 @@ public class Credential extends Core implements Filterable {
         this.url = vault.encryptString(url);
     }
 
-    public String getFavicon() {
+    public Icon getFavicon() {
         return favicon;
     }
 
-    public void setFavicon(String favicon) {
+    public void setFavicon(Icon favicon) {
         this.favicon = favicon;
     }
 
@@ -222,58 +247,146 @@ public class Credential extends Core implements Filterable {
         vault = v;
     }
 
-    public static Credential fromJSON(JSONObject j) throws JSONException {
-        Credential c = new Credential();
+    public static class Deserializer implements JsonDeserializer<Credential>
+    {
+        @Override
+        public
+        Credential deserialize (
+              final JsonElement json, final Type typeOfT, final JsonDeserializationContext context )
+              throws JsonParseException
+        {
+            Credential c = new Credential();
+            JsonObject obj = json.getAsJsonObject();
 
-        c.id = j.getInt("credential_id");
-        c.guid = j.getString("guid");
-        c.vaultId = j.getInt("vault_id");
-        c.userId = j.getString("user_id");
-        c.label = j.getString("label");
-        c.description = j.getString("description");
-        c.created = j.getLong("created");
-        c.changed = j.getLong("changed");
-        c.tags = j.getString("tags");
-        c.email = j.getString("email");
-        c.username = j.getString("username");
-        c.password = j.getString("password");
-        c.url = j.getString("url");
+            c.id = obj.get( "credential_id" ).getAsInt();
+            c.guid = JSONUtils.getString( obj, "guid" );
+            c.vaultId = obj.get( "vault_id" ).getAsInt();
+            c.userId = JSONUtils.getString( obj, "user_id" );
+            c.label = JSONUtils.getString( obj, "label" );
+            c.description = JSONUtils.getString( obj, "description" );
+            c.created = obj.get( "created" ).getAsLong();
+            c.changed = obj.get( "changed" ).getAsLong();
+            c.tags = JSONUtils.getString( obj, "tags" );
+            c.email = JSONUtils.getString( obj, "email" );
+            c.username = JSONUtils.getString( obj, "username" );
+            c.password = JSONUtils.getString( obj, "password" );
+            c.url = JSONUtils.getString( obj, "url" );
 
-        try {
-            c.favicon = j.getString("favicon");
-        }
-        catch (JSONException ex) {
-            try {
-                c.favicon = j.getString("icon");
+            JsonElement icon = null;
+
+            if (obj.has( "favicon" ))
+            {
+                icon = obj.get( "favicon" );
             }
-            catch (JSONException ex2) {
-                Log.e("Credential parse", "error, it has no icon or favicon field!", ex2);
+            else if (obj.has( "icon" ))
+            {
+                icon = obj.get( "icon" );
             }
-        }
 
-        if (j.isNull("renew_interval")) {
-            c.renewInterval = 0;
-        }
-        else {
-            c.renewInterval = j.getLong("renew_interval");
-        }
+            if ( icon != null && !icon.isJsonNull() )
+            {
+                //Timber.d( "icon: %s", icon.toString() );
+                c.favicon = context.deserialize( icon, Icon.class );
+            }
+            else
+            {
+                //Timber.d( "favicon is null!");
+                c.favicon = new Icon();
+            }
 
-        c.expireTime = j.getLong("expire_time");
-        c.deleteTime = j.getLong("delete_time");
-        c.files = j.getString("files");
-        c.customFields = j.getString("custom_fields");
-        c.otp = j.getString("otp");
-        c.hidden = j.getInt( "hidden" );//(j.getInt("hidden") > 0);
-        c.sharedKey = j.getString("shared_key");
+            JsonElement renewInterval = obj.get( "renew_interval" );
+            if (!renewInterval.isJsonNull())
+            {
+                c.renewInterval = obj.get( "renew_interval" ).getAsLong();
+            }
+            else
+            {
+                c.renewInterval = 0;
+            }
 
-        return c;
+            c.expireTime = obj.get( "expire_time" ).getAsLong();
+            c.deleteTime = obj.get( "delete_time" ).getAsLong();
+            c.files = JSONUtils.getString( obj,  "files" );
+            c.customFields = JSONUtils.getString( obj, "custom_fields" );
+            c.otp = JSONUtils.getString( obj, "otp" );
+            c.hidden = obj.get( "hidden" ).getAsInt();//(j.getInt("hidden") > 0);
+
+            c.sharedKey = JSONUtils.getString( obj, "shared_key" );
+
+            return c;
+        }
     }
 
-    public static Credential fromJSON(JSONObject j, Vault v) throws JSONException {
-        Credential c = Credential.fromJSON(j);
-        c.setVault(v);
-        return c;
+    public static class Icon
+    {
+        public String type;
+        public String content;
+
+        public
+        String getType ()
+        {
+            return type;
+        }
+
+        public
+        String getContent ()
+        {
+            return content;
+        }
     }
+
+//    public static Credential fromJSON(JSONObject j) throws JSONException {
+//        Credential c = new Credential();
+//
+//        c.id = j.getInt("credential_id");
+//        c.guid = j.getString("guid");
+//        c.vaultId = j.getInt("vault_id");
+//        c.userId = j.getString("user_id");
+//        c.label = j.getString("label");
+//        c.description = j.getString("description");
+//        c.created = j.getLong("created");
+//        c.changed = j.getLong("changed");
+//        c.tags = j.getString("tags");
+//        c.email = j.getString("email");
+//        c.username = j.getString("username");
+//        c.password = j.getString("password");
+//        c.url = j.getString("url");
+//
+//        try {
+//            c.favicon = j.getString("favicon");
+//        }
+//        catch (JSONException ex) {
+//            try {
+//                c.favicon = j.getString("icon");
+//            }
+//            catch (JSONException ex2) {
+//                Log.e("Credential parse", "error, it has no icon or favicon field!", ex2);
+//            }
+//        }
+//
+//        if (j.isNull("renew_interval")) {
+//            c.renewInterval = 0;
+//        }
+//        else {
+//            c.renewInterval = j.getLong("renew_interval");
+//        }
+//
+//        c.expireTime = j.getLong("expire_time");
+//        c.deleteTime = j.getLong("delete_time");
+//        c.files = j.getString("files");
+//        c.customFields = j.getString("custom_fields");
+//        c.otp = j.getString("otp");
+//        c.hidden = j.getInt( "hidden" );//(j.getInt("hidden") > 0);
+//        c.sharedKey = j.getString("shared_key");
+//
+//        return c;
+//    }
+//
+//    public static Credential fromJSON(JSONObject j, Vault v) throws JSONException {
+//        Credential c = Credential.fromJSON(j);
+//        c.setVault(v);
+//        return c;
+//    }
 
     @Override
     public String getFilterableAttribute() {

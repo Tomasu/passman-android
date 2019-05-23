@@ -32,6 +32,7 @@ import android.view.animation.LinearInterpolator;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
@@ -45,6 +46,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import es.wolfi.passman.API.Credential;
 import es.wolfi.passman.API.Vault;
+import timber.log.Timber;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -99,12 +103,12 @@ class CredentialFragment extends BaseFragment
 	 */
 	// TODO: Rename and change types and number of parameters
 	public static
-	CredentialFragment newInstance ( String credentialGUID )
+	CredentialFragment newInstance ( @NonNull String credentialGUID )
 	{
 		CredentialFragment fragment = new CredentialFragment();
 
 		Bundle b = new Bundle();
-		b.putString( CREDENTIAL, credentialGUID );
+		b.putString( CREDENTIAL, checkNotNull(credentialGUID, "Null guid?!") );
 		fragment.setArguments( b );
 
 		return fragment;
@@ -120,6 +124,7 @@ class CredentialFragment extends BaseFragment
 		{
 			Vault activeVault = mDataStore.getActiveVault();
 			credential = activeVault.findCredentialByGUID( getArguments().getString( CREDENTIAL ) );
+			Timber.d( "credential: %s", credential );
 		}
 
 		handler = new Handler();
@@ -174,15 +179,6 @@ class CredentialFragment extends BaseFragment
 	void onAttach ( Context context )
 	{
 		super.onAttach( context );
-		if ( context instanceof OnCredentialFragmentInteraction )
-		{
-			mListener = (OnCredentialFragmentInteraction) context;
-		}
-		else
-		{
-			throw new RuntimeException(
-					context.toString() + " must implement OnFragmentInteractionListener" );
-		}
 	}
 
 	@Override

@@ -38,18 +38,18 @@ class App extends Application implements HasActivityInjector, HasSupportFragment
 	public
 	void onCreate ()
 	{
-		DaggerApplicationComponent.builder().application( this ).create( this ).inject( this );
-
-		super.onCreate();
-
-		if (BuildConfig.DEBUG)
+		if ( BuildConfig.DEBUG )
 		{
-			Timber.plant(new Timber.DebugTree());
+			Timber.plant( new Timber.DebugTree() );
 		}
 		else
 		{
 			//Timber.plant( new CrashReportingTree() );
 		}
+
+		DaggerApplicationComponent.builder().application( this ).create( this ).inject( this );
+
+		super.onCreate();
 
 		if (mDataStore.haveHost())
 		{
