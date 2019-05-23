@@ -1,7 +1,18 @@
 package es.wolfi.app.passman;
 
+import android.app.Activity;
 import android.app.Application;
 
+import androidx.fragment.app.Fragment;
+
+import javax.inject.Inject;
+
+import dagger.android.AndroidInjector;
+import dagger.android.DispatchingAndroidInjector;
+import dagger.android.HasActivityInjector;
+import dagger.android.support.HasSupportFragmentInjector;
+import es.wolfi.app.passman.dagger.DaggerApplicationComponent;
+import es.wolfi.passman.API.PassmanApi;
 import timber.log.Timber;
 
 /**
@@ -9,12 +20,26 @@ import timber.log.Timber;
  * @since ${VERSION}
  */
 public
-class App extends Application
+class App extends Application implements HasActivityInjector, HasSupportFragmentInjector
 {
+	@Inject
+	DispatchingAndroidInjector< Activity > mActivityDispatchingAndroidInjector;
+
+	@Inject
+	DispatchingAndroidInjector< Fragment > mFragmentDispatchingAndroidInjector;
+
+	@Inject
+	DataStore mDataStore;
+
+	@Inject
+	PassmanApi mApi;
+
 	@Override
 	public
 	void onCreate ()
 	{
+		DaggerApplicationComponent.builder().application( this ).create( this ).inject( this );
+
 		super.onCreate();
 
 		if (BuildConfig.DEBUG)
@@ -25,5 +50,28 @@ class App extends Application
 		{
 			//Timber.plant( new CrashReportingTree() );
 		}
+
+		if (mDataStore.haveHost())
+		{
+			Timber.d( "have host! setup stuff!" );
+			mApi.setHost( mDataStore.getHost() );
+			mApi.setUserName( mDataStore.getUserName() );
+			mApi.setAuthToken( mDataStore.getAuthToken() );
+		}
 	}
+
+	@Override
+	public
+	AndroidInjector< Activity > activityInjector ()
+	{
+		return mActivityDispatchingAndroidInjector;
+	}
+
+	@Override
+	public
+	AndroidInjector< Fragment > supportFragmentInjector ()
+	{
+		return mFragmentDispatchingAndroidInjector;
+	}
+
 }

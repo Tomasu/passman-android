@@ -23,15 +23,18 @@ package es.wolfi.app.passman;
 import android.view.View;
 import java.util.HashMap;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
+@Singleton
 public class SingleTon {
-    protected final static SingleTon _ton = new SingleTon();
 
     protected HashMap<String, View.OnClickListener> _click;
     protected HashMap<String, Object>               _extra;
     protected HashMap<String, String>               _string;
     protected HashMap<String, ICallback>            _callback;
 
+    @Inject
     public SingleTon(){
         _callback   = new HashMap<String, ICallback>();
         _string     = new HashMap<String, String>();
@@ -80,9 +83,5 @@ public class SingleTon {
 
     public Object getExtra(String name){
         return _extra.get(name);
-    }
-
-    public final static SingleTon getTon(){
-        return _ton;
     }
 }

@@ -28,9 +28,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
-import es.wolfi.app.passman.CredentialItemFragment;
 import es.wolfi.app.passman.CredentialViewAdapter;
-import es.wolfi.app.passman.VaultFragment;
+import es.wolfi.app.passman.OnCredentialListFragmentInteractionListener;
+import es.wolfi.app.passman.OnListFragmentInteractionListener;
 import es.wolfi.app.passman.VaultViewAdapter;
 import es.wolfi.passman.API.Credential;
 import es.wolfi.passman.API.Vault;
@@ -39,18 +39,18 @@ public class FilterListAsyncTask <T extends Filterable> extends AsyncTask<ArrayL
 
     private String filter;
     RecyclerView                                             recyclerView;
-    CredentialItemFragment.OnListFragmentInteractionListener credentialMListener = null;
-    VaultFragment.OnListFragmentInteractionListener          vaultMListener = null;
+    OnCredentialListFragmentInteractionListener credentialMListener = null;
+    OnListFragmentInteractionListener vaultMListener = null;
     Boolean                                                  isVaultFragment;
 
-    public FilterListAsyncTask(String filter, RecyclerView recyclerView, CredentialItemFragment.OnListFragmentInteractionListener mListener){
+    public FilterListAsyncTask (String filter, RecyclerView recyclerView, OnCredentialListFragmentInteractionListener mListener ){
         this.filter = filter;
         this.recyclerView = recyclerView;
         this.credentialMListener = mListener;
         this.isVaultFragment = false;
     }
 
-    public FilterListAsyncTask(String filter, RecyclerView recyclerView, VaultFragment.OnListFragmentInteractionListener mListener){
+    public FilterListAsyncTask (String filter, RecyclerView recyclerView, OnListFragmentInteractionListener mListener ){
         this.filter = filter;
         this.recyclerView = recyclerView;
         this.vaultMListener = mListener;

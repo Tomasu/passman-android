@@ -1,28 +1,24 @@
 package es.wolfi.app.passman;
 
 import android.Manifest;
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import es.wolfi.passman.API.Core;
+import javax.inject.Inject;
+
 import timber.log.Timber;
 
 public
-class SplashActivity extends AppCompatActivity
+class SplashActivity extends BaseActivity
 {
 	private static final int REQUEST_GET_ACCOUNTS = 1;
 
-	SharedPreferences settings;
-	SingleTon         ton;
+	@Inject
+	DataStore mDataStore;
 
 	@Override
 	protected
@@ -32,10 +28,7 @@ class SplashActivity extends AppCompatActivity
 
 		Timber.d( "onCreate" );
 
-		settings = PreferenceManager.getDefaultSharedPreferences( this );
-		ton = SingleTon.getTon();
-
-		if (Core.haveHost( this ) )
+		if (mDataStore.haveHost())
 		{
 			Timber.d( "have host! launch password list!" );
 
@@ -122,18 +115,6 @@ class SplashActivity extends AppCompatActivity
 
 	private void doLogin()
 	{
-		AccountManager accountManager = AccountManager.get( this );
-		Account[] accounts = accountManager.getAccountsByType( "nextcloud" );
-		Account[] accounts2 = accountManager.getAccountsByType( null );
-		Timber.d( "accounts: %d", accounts.length );
-		Timber.d( "accounts2: %d", accounts2.length );
-		//accountManager.
-
-		for ( Account account : accounts )
-		{
-			Timber.d( "account: %s", account.toString() );
-		}
-
 		Timber.d( "go to login!" );
 		LoginActivity.launch( this, new LoginICallback() );
 		finish();
