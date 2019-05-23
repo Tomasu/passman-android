@@ -140,8 +140,9 @@ class CredentialListFragment extends BaseFragment implements OnCredentialListFra
 			mVault = mDataStore.getActiveVault();
 			if (mVault == null)
 			{
-				Snackbar.make( mRecyclerView, "No active vault?!", Snackbar.LENGTH_LONG ).show();
+				Snackbar.make( container, "No active vault?!", Snackbar.LENGTH_LONG ).show();
 				getActivity().getSupportFragmentManager().popBackStack();
+				return view;
 			}
 
 			final EditText searchInput = (EditText) view.findViewById( R.id.search_input );
@@ -202,7 +203,7 @@ class CredentialListFragment extends BaseFragment implements OnCredentialListFra
 		if ( mVault != null )
 		{
 			List< Credential > credentials = mVault.getCredentials();
-			Timber.d( "credentials: %s", credentials );
+			//Timber.d( "credentials: %s", credentials );
 
 			if ( credentials == null || credentials.size() < 1 )
 			{
@@ -213,6 +214,11 @@ class CredentialListFragment extends BaseFragment implements OnCredentialListFra
 
 				mDisposable.add(
 						getVaultObservable.subscribeWith( new VaultDisposableSingleObserver() ) );
+			}
+			else
+			{
+//				Credential secondCred = mVault.getCredentials().get( 1 );
+//				Timber.d( "second cred email: %s", secondCred.getEmail() );
 			}
 		}
 		else
@@ -243,11 +249,12 @@ class CredentialListFragment extends BaseFragment implements OnCredentialListFra
 	public
 	void onListFragmentInteraction ( final Credential item )
 	{
-		Timber.d( "selected item: %s", item );
+//		Timber.d( "selected item: %s", item.getGuid() );
 		CredentialFragment credentialFragment = CredentialFragment.newInstance( item.getGuid() );
 
 		getActivity().getSupportFragmentManager()
 				.beginTransaction()
+				.addToBackStack( null )
 				.replace( R.id.fragment_container, credentialFragment, CredentialFragment.FRAG_TAG)
 				.commit();
 	}
@@ -262,6 +269,18 @@ class CredentialListFragment extends BaseFragment implements OnCredentialListFra
 			mDataStore.putVault( vault.guid, vault );
 			mDataStore.setActiveVault( vault );
 			mVault = vault;
+
+			if (!vault.unlock( mDataStore.getVaultPassword( vault ) ))
+			{
+				Timber.e( "failed to (re)unlock vault?!?!" );
+			}
+			else
+			{
+				Timber.d( "vault re-unlocked!" );
+			}
+
+//			Credential secondCred = mVault.getCredentials().get( 1 );
+//			Timber.d( "second cred email: %s", secondCred.getEmail() );
 
 			mRecyclerView.setAdapter( new CredentialViewAdapter( mVault.getCredentials(), CredentialListFragment.this ) );
 		}

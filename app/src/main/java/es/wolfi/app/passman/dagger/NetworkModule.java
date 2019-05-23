@@ -10,8 +10,10 @@ import javax.inject.Singleton;
 import dagger.Module;
 import dagger.Provides;
 import es.wolfi.app.passman.network.RequestInterceptor;
+import es.wolfi.passman.API.Credential;
 import es.wolfi.passman.API.PassmanApi;
 import es.wolfi.passman.API.PassmanService;
+import es.wolfi.passman.API.Vault;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
@@ -64,9 +66,32 @@ class NetworkModule
 
 	@Provides
 	@Singleton
-	static Gson provideGson ()
+	static Gson provideGson (@NonNull Vault.Deserializer vaultDeserializer,
+									 @NonNull Credential.Deserializer credentialDeserializer)
 	{
-		return new GsonBuilder().setLenient().create();
+		return new GsonBuilder()
+				.setLenient()
+				.setPrettyPrinting()
+				.registerTypeAdapter( Vault.class, vaultDeserializer )
+				.registerTypeAdapter( Credential.class, credentialDeserializer )
+				//.serializeNulls()
+				.create();
+	}
+
+	@Provides
+	@Singleton
+	static
+	Vault.Deserializer provideVaultDeserializer()
+	{
+		return new Vault.Deserializer();
+	}
+
+	@Provides
+	@Singleton
+	static
+	Credential.Deserializer provideCredentialDeserializer()
+	{
+		return new Credential.Deserializer();
 	}
 
 	@Provides
@@ -81,7 +106,7 @@ class NetworkModule
 					{
 						Timber.tag( "OkHttp").d(message);
 					}
-				} ).setLevel( HttpLoggingInterceptor.Level.BODY );
+				} ).setLevel( HttpLoggingInterceptor.Level.BASIC );
 	}
 	@Provides
 	@Singleton

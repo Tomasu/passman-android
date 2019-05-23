@@ -131,11 +131,16 @@ class VaultUnlockFragment extends BaseFragment
 	void onBtnUnlockClick ()
 	{
 		String password = vault_password.getText().toString();
+		Timber.d( "onUnlockClick: %s", password );
+
 		if ( vault.unlock( password ) )
 		{
+			Timber.d( "successfully unlocked vault" );
+
 			if ( chk_save.isChecked() )
 			{
-				mDataStore.putVaultPassword( vault, vault_password.getText().toString() );
+				Timber.d( "save vault password" );
+				mDataStore.putVaultPassword( vault, password );
 			}
 
 			CredentialListFragment fragment = new CredentialListFragment();

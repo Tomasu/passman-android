@@ -207,12 +207,15 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 	{
 		mDataStore.setActiveVault( vault );
 
-		if ( vault.is_unlocked() )
+		String vaultPass = mDataStore.getVaultPassword( vault );
+		if ( vaultPass != null && vault.unlock(vaultPass) )
 		{
+			Timber.d( "vault already unlocked" );
 			showVault();
 		}
 		else
 		{
+			Timber.d( "vault locked" );
 			showUnlockVault();
 		}
 	}

@@ -328,7 +328,7 @@ public class PasswordList extends BaseActivity
 
         mDataStore.clear();
 
-        recreate();
+        LoginActivity.launch( this, null );
     }
 
     private void showNotImplementedMessage() {

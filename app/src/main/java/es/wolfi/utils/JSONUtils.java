@@ -22,6 +22,11 @@
 
 package es.wolfi.utils;
 
+import androidx.annotation.NonNull;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 public class JSONUtils {
     /**
      * Checks if an string looks like a json object
@@ -41,5 +46,32 @@ public class JSONUtils {
     public static final boolean isJSONArray(String data){
         if (data.length() == 0) return false;
         return data.charAt(0) == '[' && data.charAt(data.length() -1) == ']';
+    }
+
+    public static final
+    String getString ( @NonNull JsonObject object, @NonNull String key, @NonNull String def )
+    {
+        String value = def;
+        JsonElement element = object.get( key );
+        if ( !element.isJsonNull() )
+        {
+            value = element.getAsString();
+        }
+
+        return value;
+    }
+
+    public static final
+    String getString ( @NonNull JsonObject object, @NonNull String key )
+    {
+        String value = "";
+        JsonElement element = object.get( key );
+//        Timber.d( "key: %s, clss: %s, value: %s", key, element.getClass().getSimpleName(), element.toString());
+        if ( !element.isJsonNull() )
+        {
+            value = element.getAsString();
+        }
+
+        return value;
     }
 }
