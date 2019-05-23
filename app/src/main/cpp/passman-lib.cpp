@@ -59,7 +59,7 @@ jstring Java_es_wolfi_app_passman_SJCLCrypto_decryptString(JNIEnv *env, jobject 
     std::string json = (char *) t->data;
     free(t);
 
-//    __android_log_write(ANDROID_LOG_ERROR, LOG_TAG, json.c_str());
+    //__android_log_write(ANDROID_LOG_DEBUG, LOG_TAG, json.c_str());
 
     char *result = WLF::Crypto::SJCL::decrypt(json, password);
 
@@ -68,7 +68,7 @@ jstring Java_es_wolfi_app_passman_SJCLCrypto_decryptString(JNIEnv *env, jobject 
     }
     else {
 //        __android_log_write(ANDROID_LOG_ERROR, LOG_TAG, "WHOOP!");
-//        __android_log_write(ANDROID_LOG_ERROR, LOG_TAG, result);
+//        __android_log_write(ANDROID_LOG_DEBUG, LOG_TAG, result);
         jstring str = env->NewStringUTF(result);
         free(result);
         return str;

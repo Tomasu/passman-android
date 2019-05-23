@@ -13,6 +13,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import es.wolfi.passman.API.Credential;
 import es.wolfi.passman.API.Vault;
 import java9.util.stream.StreamSupport;
 import timber.log.Timber;
@@ -71,7 +72,12 @@ class DataStore
 					String vaultPass = getString( vaultPassKey );
 					if (vaultPass != null)
 					{
+						Timber.d( "vault pass: %s", vaultPass);
 						mVaultPassMap.put( vault.guid, vaultPass );
+					}
+					else
+					{
+						Timber.d( "vault pass empty" );
 					}
 				}
 			}
@@ -188,6 +194,9 @@ class DataStore
 
 		editor.remove( ACTIVE_VAULT_KEY );
 		editor.remove( VAULT_SET_KEY );
+		editor.remove( HOST_KEY );
+		editor.remove( USER_KEY );
+		editor.remove( TOKEN_KEY );
 		editor.apply();
 
 		mActiveVault = null;
@@ -233,7 +242,10 @@ class DataStore
 	public
 	void putVaultPassword ( @NonNull Vault vault, @NonNull String password )
 	{
-		mVaultPassMap.put( vault.guid, password ); // TODO: encrypt me...
+		// TODO: encrypt me...
+		putString( getVaultPassKey( vault ), password ); // save to storage
+		//vault.setEncryptionKey( password );
+		mVaultPassMap.put( vault.guid, password );
 	}
 
 	public
@@ -246,13 +258,19 @@ class DataStore
 	void putVault ( @NonNull String guid, @NonNull Vault vault )
 	{
 		mVaultMap.put( checkNotNull( guid, "Null name?!" ), checkNotNull( vault, "Null vault?!" ) );
+		List< Credential > credentials = vault.getCredentials();
+		if (credentials != null && credentials.size() > 0)
+		{
+			for ( Credential cred : credentials )
+			{
+				cred.setVault( vault );
+			}
+		}
 	}
 
 	public
 	void putVaults( @NonNull List<Vault> vaultList )
 	{
-		List<String> toRemove = new ArrayList<>();
-
 		StreamSupport.stream( mVaultMap.keySet() )
 				.filter( (key) -> !vaultList.contains( key ) )
 				.forEach( (key) -> mVaultPassMap.remove( key ) );
@@ -264,7 +282,7 @@ class DataStore
 			mVaultMap.put( v.guid, v );
 		}
 
-		if (!mVaultMap.containsKey( mActiveVault.guid ))
+		if (mActiveVault != null && !mVaultMap.containsKey( mActiveVault.guid ))
 		{
 			mActiveVault = null;
 		}

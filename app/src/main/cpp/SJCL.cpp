@@ -164,6 +164,12 @@ char* SJCL::decrypt(string sjcl_json, string key) {
             free(plaintext);
             free(result);
         }
+        else if (result->IsNull())
+        {
+            // hide null values as empty strings
+            ret = static_cast<char *>(malloc(1));
+            *ret = 0;
+        }
         else {
             ret = (char *) plaintext;
         }
