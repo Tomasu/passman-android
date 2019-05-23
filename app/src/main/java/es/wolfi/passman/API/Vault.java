@@ -22,11 +22,9 @@
 
 package es.wolfi.passman.API;
 
-import android.content.Context;
-import android.util.Log;
+import androidx.annotation.NonNull;
 
-import com.koushikdutta.async.future.FutureCallback;
-
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,9 +32,13 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Objects;
 
 import es.wolfi.app.passman.SJCLCrypto;
 import es.wolfi.utils.Filterable;
+import timber.log.Timber;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Vault extends Core implements Filterable{
     public int vault_id;
@@ -53,21 +55,22 @@ public class Vault extends Core implements Filterable{
     private String encryption_key = "";
 
     public void setEncryptionKey(String k) {
-        encryption_key = k;
+        encryption_key = checkNotNull( k, "Null key?!" );
     }
 
-    public String decryptString(String cryptogram) {
+    public String decryptString( @NotNull String cryptogram) {
         try {
-            return SJCLCrypto.decryptString(cryptogram, encryption_key);
+            return SJCLCrypto.decryptString(checkNotNull( cryptogram, "Null cryptogram?!" ), checkNotNull( encryption_key, "Null key?!" ));
         } catch (Exception e) {
-            Log.e("Vault", e.getMessage());
+            Timber.e( e );
             e.printStackTrace();
         }
         return "Error decrypting";
     }
 
-    public boolean unlock(String key) {
-        encryption_key = key;
+    public boolean unlock (@NotNull String key)
+    {
+        encryption_key = checkNotNull( key, "Null key?!");
 
         // Check if the key was correct
         if (is_unlocked()) {
@@ -80,8 +83,11 @@ public class Vault extends Core implements Filterable{
 
     public boolean is_unlocked() {
         try {
+            Objects.requireNonNull( encryption_key );
+            Objects.requireNonNull( challenge_password );
+
             if (!encryption_key.isEmpty()) {
-                SJCLCrypto.decryptString(challenge_password, encryption_key);
+                SJCLCrypto.decryptString(checkNotNull( challenge_password, "Null challenge password?!" ), checkNotNull( encryption_key, "Null encryption key?!" ));
                 return true;
             }
             return false;
@@ -100,7 +106,9 @@ public class Vault extends Core implements Filterable{
     }
 
     public Credential findCredentialByGUID(String guid) {
-        Log.e("Vault", "GUID: ".concat(guid).concat(" Arr pos: ").concat(String.valueOf(credential_guid.get(guid))));
+        Timber.e( "GUID: ".concat( guid )
+                        .concat( " Arr pos: " )
+                        .concat( String.valueOf( credential_guid.get( guid ) ) ) );
         return credentials.get(credential_guid.get(guid));
     }
 
@@ -111,59 +119,64 @@ public class Vault extends Core implements Filterable{
     public ArrayList<Credential> getCredentials() {
         return credentials;
     }
-
-    public static void getVaults(Context c, final FutureCallback<HashMap<String, Vault>> cb) {
-        Vault.requestAPIGET(c, "vaults",new FutureCallback<String>() {
-            @Override
-            public void onCompleted(Exception e, String result) {
-                if (e != null) {
-                    cb.onCompleted(e, null);
-                    return;
-                }
-
-                Log.e(Vault.LOG_TAG, result);
-//                cb.onCompleted(e, null);
-                try {
-                    JSONArray data = new JSONArray(result);
-                    HashMap<String, Vault> l = new HashMap<String, Vault>();
-                    for (int i = 0; i < data.length(); i++) {
-                        Vault v = Vault.fromJSON(data.getJSONObject(i));
-                        l.put(v.guid, v);
-                    }
-
-                    cb.onCompleted(e, l);
-                }
-                catch (JSONException ex) {
-                    cb.onCompleted(ex, null);
-                }
-            }
-        });
+    public
+    void setCredentials (@NonNull ArrayList<Credential> credentials )
+    {
+        this.credentials = checkNotNull(credentials, "Null credentials?!");
     }
 
-    public static void getVault(Context c, String guid, final FutureCallback<Vault> cb) {
-        Vault.requestAPIGET(c, "vaults/".concat(guid),new FutureCallback<String>() {
-            @Override
-            public void onCompleted(Exception e, String result) {
-                if (e != null) {
-                    cb.onCompleted(e, null);
-                    return;
-                }
+//    public static void getVaults (Context c, final FutureCallback<HashMap<String, Vault>> cb ) {
+//        Vault.requestAPIGET(c, "vaults",new FutureCallback<String>() {
+//            @Override
+//            public void onCompleted(Exception e, String result) {
+//                if (e != null) {
+//                    cb.onCompleted(e, null);
+//                    return;
+//                }
+//
+//                Log.e(Vault.LOG_TAG, result);
+////                cb.onCompleted(e, null);
+//                try {
+//                    JSONArray data = new JSONArray(result);
+//                    HashMap<String, Vault> l = new HashMap<String, Vault>();
+//                    for (int i = 0; i < data.length(); i++) {
+//                        Vault v = Vault.fromJSON(data.getJSONObject(i));
+//                        l.put(v.guid, v);
+//                    }
+//
+//                    cb.onCompleted(e, l);
+//                }
+//                catch (JSONException ex) {
+//                    cb.onCompleted(ex, null);
+//                }
+//            }
+//        });
+//    }
+//
+//    public static void getVault(Context c, String guid, final FutureCallback<Vault> cb) {
+//        Vault.requestAPIGET(c, "vaults/".concat(guid),new FutureCallback<String>() {
+//            @Override
+//            public void onCompleted(Exception e, String result) {
+//                if (e != null) {
+//                    cb.onCompleted(e, null);
+//                    return;
+//                }
+//
+//                try {
+//                    JSONObject data = new JSONObject(result);
+//
+//                    Vault v = Vault.fromJSON(data);
+//
+//                    cb.onCompleted(e, v);
+//                }
+//                catch (JSONException ex) {
+//                    cb.onCompleted(ex, null);
+//                }
+//            }
+//        });
+//    }
 
-                try {
-                    JSONObject data = new JSONObject(result);
-
-                    Vault v = Vault.fromJSON(data);
-
-                    cb.onCompleted(e, v);
-                }
-                catch (JSONException ex) {
-                    cb.onCompleted(ex, null);
-                }
-            }
-        });
-    }
-
-    protected static Vault fromJSON(JSONObject o) throws JSONException{
+    public static Vault fromJSON(JSONObject o) throws JSONException{
         Vault v = new Vault();
 
         v.vault_id = o.getInt("vault_id");

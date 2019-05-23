@@ -28,22 +28,23 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import es.wolfi.passman.API.Credential;
 
 /**
  * {@link RecyclerView.Adapter} that can display a {@link Credential} and makes a call to the
- * specified {@link CredentialItemFragment.OnListFragmentInteractionListener}.
+ * specified {@link OnCredentialListFragmentInteractionListener}.
  * TODO: Replace the implementation with code for your data type.
  */
 public class CredentialViewAdapter extends RecyclerView.Adapter<CredentialViewAdapter.ViewHolder> {
 
     private final List<Credential> mValues;
-    private final CredentialItemFragment.OnListFragmentInteractionListener mListener;
+    private final OnCredentialListFragmentInteractionListener mListener;
 
-    public CredentialViewAdapter(List<Credential> items, CredentialItemFragment.OnListFragmentInteractionListener listener) {
-        mValues = items;
+    public CredentialViewAdapter (List<Credential> items, OnCredentialListFragmentInteractionListener listener ) {
+        mValues = items != null ? items : new ArrayList<>();
         mListener = listener;
     }
 

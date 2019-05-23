@@ -26,37 +26,38 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
-import com.koushikdutta.async.future.FutureCallback;
+import javax.inject.Inject;
 
-import java.util.HashMap;
-
-import es.wolfi.passman.API.Core;
-import es.wolfi.passman.API.Credential;
-import es.wolfi.passman.API.Vault;
+import butterknife.BindView;
+import es.wolfi.passman.API.PassmanApi;
 import timber.log.Timber;
 
-public class PasswordList extends AppCompatActivity implements
-        VaultFragment.OnListFragmentInteractionListener,
-        CredentialItemFragment.OnListFragmentInteractionListener,
-        VaultLockScreen.VaultUnlockInteractionListener,
-        CredentialDisplay.OnCredentialFragmentInteraction
+public class PasswordList extends BaseActivity
 {
     public static final String FRAG_TAG_VAULTS = "vaults";
 
-    SharedPreferences settings;
-    SingleTon ton;
-
     static boolean running = false;
+
+    @Inject
+    SharedPreferences mSharedPreferences;
+
+    @BindView( R.id.content )
+    CoordinatorLayout mCoordinatorLayout;
+
+    @Inject
+    PassmanApi mApi;
+
+    @Inject
+    DataStore mDataStore;
 
     /**
      * Displays this activity
@@ -78,9 +79,6 @@ public class PasswordList extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_password_list);
 
-        settings = PreferenceManager.getDefaultSharedPreferences(this);
-        ton = SingleTon.getTon();
-
         Toolbar toolbar = (Toolbar) findViewById( R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setHomeButtonEnabled(true);
@@ -95,43 +93,43 @@ public class PasswordList extends AppCompatActivity implements
     void onResume ()
     {
         super.onResume();
-        Timber.d( "onResume! running=" + running + " ton=" + ton );
+        Timber.d( "onResume! running=" + running );
 
         // @TODO: Display loading screen while checking credentials!
-        final AppCompatActivity self = this;
-        Core.checkLogin( this, false, new FutureCallback< Boolean >()
-        {
-            @Override
-            public
-            void onCompleted ( Exception e, Boolean result )
-            {
-                if ( result )
-                {
-                    Timber.d( "in checkLogin/onCompleted" );
-                    showVaults();
-                    return;
-                }
 
-                Timber.d( "not logged in! show login!" );
-                Timber.e( e );
-                // If not logged in, show login form!
-                LoginActivity.launch( self, new ICallback()
-                {
-                    @Override
-                    public
-                    void onTaskFinished ()
-                    {
-                        Timber.d( "in checkLogin/LoginActivity.onTaskFinished" );
-                        showVaults();
-                    }
-                } );
-
-            }
-        } );
+//        final AppCompatActivity self = this;
+//        Core.checkLogin( this, false, new FutureCallback< Boolean >()
+//        {
+//            @Override
+//            public
+//            void onCompleted ( Exception e, Boolean result )
+//            {
+//                if ( result )
+//                {
+//                    Timber.d( "in checkLogin/onCompleted" );
+//                    showVaults();
+//                    return;
+//                }
+//
+//                Timber.d( "not logged in! show login!" );
+//                Timber.e( e );
+//                // If not logged in, show login form!
+//                LoginActivity.launch( self, new ICallback()
+//                {
+//                    @Override
+//                    public
+//                    void onTaskFinished ()
+//                    {
+//                        Timber.d( "in checkLogin/LoginActivity.onTaskFinished" );
+//                        showVaults();
+//                    }
+//                } );
+//
+//            }
+//        } );
 
         Timber.d( "in onResume before showVaults!" );
-        showVaults();
-
+        displayVaultList();
     }
 
     @Override
@@ -139,154 +137,159 @@ public class PasswordList extends AppCompatActivity implements
     void onPause ()
     {
         super.onPause();
-        Timber.d( "onResume! running=" + running + " ton=" + ton );
+
+        mDataStore.save();
+
+        Timber.d( "onPause! running=" + running );
     }
 
-    public void showVaults() {
-//        Core.getAPIVersion(this, new FutureCallback<Integer>() {
-//            @Override
-//            public void onCompleted(Exception e, Integer result) {
-//
-//            }
-//        });
-
-        HashMap<String, Vault> vaults = (HashMap<String, Vault>) ton.getExtra(SettingValues.VAULTS.toString());
-        if (vaults != null) {
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            Fragment vaultFragment = fragmentManager.findFragmentByTag( "vault" );
-            if (vaultFragment != null && vaultFragment.isVisible())
-            {
-                // just ignore showVaults since we're already in a vault.
-                Timber.d( "have vaults and a vault fragment is already displayed" );
-                return;
-            }
-
-            Fragment fragment = fragmentManager.findFragmentByTag( FRAG_TAG_VAULTS );
-            if (fragment == null)
-            {
-                Timber.d( "fault fragment not found. create!" );
-                fragment = new VaultFragment();
-            }
-            else
-            {
-                Timber.d( "current fragment: %s", fragment.getClass()
-                      .getSimpleName() );
-            }
-
-            if (!fragment.isVisible())
-            {
-                Timber.d( "vault isn't visible, SHOW VAULT!" );
-                getSupportFragmentManager().beginTransaction()
-                      //.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                      .replace( R.id.content_password_list, fragment, FRAG_TAG_VAULTS )
-                      .commit();
-            }
-            else
-            {
-                Timber.d( "vault is already visible!" );
-            }
-        }
-        else {
-            Vault.getVaults(this, new FutureCallback<HashMap<String, Vault>>() {
-                @Override
-                public void onCompleted(Exception e, HashMap<String, Vault> result) {
-                    if (e != null) {
-                        // Not logged in, restart activity
-                        if (e.getMessage().equals("401")) {
-                            finish();
-                            return;
-                        }
-
-                        Toast.makeText(getApplicationContext(), getString(R.string.net_error), Toast.LENGTH_LONG).show();
-                        new android.os.Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                showVaults();
-                            }
-                        }, 30000);
-                        return;
-                    }
-
-                    ton.addExtra(SettingValues.VAULTS.toString(), result);
-                    showVaults();
-                }
-            });
-        }
-    }
-
-    public void showActiveVault() {
-        Timber.d( "showActiveVault" );
-
-        Vault vault = (Vault) ton.getExtra(SettingValues.ACTIVE_VAULT.toString());
-        if (vault.getCredentials() != null) {
-            Timber.d( "vault has credentials" );
-            if (vault.is_unlocked()) {
-                Timber.d( "vault is unlocked, show cred item fragment" );
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                        .replace(R.id.content_password_list, new CredentialItemFragment(), "vault")
-                        .addToBackStack(null)
-                        .commit();
-            }
-            else {
-                Timber.d( "vault is locked, show unlock vault" );
-                showUnlockVault();
-            }
-        }
-        else {
-            Timber.d( "vault has no credentials?" );
-
-            Vault.getVault(this, vault.guid, new FutureCallback<Vault>() {
-                @Override
-                public void onCompleted(Exception e, Vault result) {
-                    if (e != null) {
-                        // Not logged in, restart activity
-                        if (e.getMessage() != null && e.getMessage().equals("401")) {
-                            recreate();
-                        }
-
-                        Timber.e(e, "Unknown network error");
-
-                        Toast.makeText(getApplicationContext(), getString(R.string.net_error), Toast.LENGTH_LONG).show();
-                        new android.os.Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                showVaults();
-                            }
-                        }, 30000);
-                        return;
-                    }
-
-                    // Update the vault record to avoid future loads
-                    ((HashMap<String, Vault>)ton.getExtra(SettingValues.VAULTS.toString())).put(result.guid, result);
-
-                    ton.addExtra(SettingValues.ACTIVE_VAULT.toString(), result);
-                    showActiveVault();
-                }
-            });
-
-        }
-    }
-
-    void showUnlockVault() {
-        Timber.d( "showUnlockVault" );
-
-        Vault v = (Vault) ton.getExtra(SettingValues.ACTIVE_VAULT.toString());
-        if (v.unlock(settings.getString(v.guid, ""))){
-            Timber.d( "unlocked vault, show active" );
-            showActiveVault();
+    private
+    void displayVaultList ()
+    {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        Fragment vaultListFragment = fragmentManager.findFragmentByTag( VaultListFragment.FRAG_TAG );
+        if ( vaultListFragment != null && vaultListFragment.isVisible() )
+        {
+            // just ignore showVaults since we're already in the vault list
+            Timber.d( "have vaults and a vault list is already displayed" );
             return;
         }
 
-        Timber.d( "show unlock vault fragment" );
-        getSupportFragmentManager()
-                .beginTransaction()
-                .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_out_left, R.anim.slide_out_left)
-                .replace(R.id.content_password_list, new VaultLockScreen(), "vault")
-                .addToBackStack(null)
-                .commit();
+        Fragment credListFragment = fragmentManager.findFragmentByTag( CredentialListFragment.FRAG_TAG );
+        if (credListFragment != null && credListFragment.isVisible())
+        {
+            Timber.d( "cred list visible. do nothing" );
+            return;
+        }
+
+        VaultListFragment fragment = new VaultListFragment();
+
+        getSupportFragmentManager().beginTransaction()
+              //.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim
+              // .slide_in_left, R.anim.slide_out_right)
+              .replace( R.id.fragment_container, fragment, FRAG_TAG_VAULTS )
+              .commit();
     }
+//
+//    private
+//    void onVaultListSuccess ( final HashMap< String, Vault > body )
+//    {
+//        mDataStore.mergeVaultList( body );
+//        displayVaultList();
+//    }
+
+//    public
+//    void showActiveVault()
+//    {
+//        Timber.d( "showActiveVault" );
+//
+//        Vault vault = mDataStore.getActiveVault();
+//        if (vault == null)
+//        {
+//            Timber.w( "no active vault?!" );
+//            recreate();
+//            return;
+//        }
+//
+//        if (vault.getCredentials() != null) {
+//            Timber.d( "vault has credentials" );
+//            if (vault.is_unlocked()) {
+//                Timber.d( "vault is unlocked, show cred item fragment" );
+//
+//                CredentialListFragment fragment = new CredentialListFragment();
+//
+//                getSupportFragmentManager()
+//                        .beginTransaction()
+//                        .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+//                        .replace(R.id.fragment_container, fragment, "vault")
+//                        .addToBackStack(null)
+//                        .commit();
+//            }
+//            else {
+//                Timber.d( "vault is locked, show unlock vault" );
+//                showUnlockVault();
+//            }
+//        }
+//        else {
+//            Timber.d( "vault has no credentials?" );
+//
+//            Call<Vault> getVaultCall = mApi.getVault( vault.guid );
+//            getVaultCall.enqueue( new Callback< Vault >() {
+//                @Override
+//                public
+//                void onResponse (
+//                      final Call< Vault > call, final Response< Vault > response )
+//                {
+//                    if (response.code() == 401)
+//                    {
+//                        recreate();
+//                        return;
+//                    }
+//
+//                    Snackbar.make( mCoordinatorLayout, R.string.net_error , Snackbar.LENGTH_LONG ).show();
+//
+//                    // some kind of error attempting fetch
+//                }
+//
+//                @Override
+//                public
+//                void onFailure ( final Call< Vault > call, final Throwable t )
+//                {
+//
+//                }
+//            } );
+//
+//            Vault.getVault(this, vault.guid, new FutureCallback<Vault>() {
+//                @Override
+//                public void onCompleted(Exception e, Vault result) {
+//                    if (e != null) {
+//                        // Not logged in, restart activity
+//                        if (e.getMessage() != null && e.getMessage().equals("401")) {
+//                            recreate();
+//                        }
+//
+//                        Timber.e(e, "Unknown network error");
+//
+//                        Toast.makeText(getApplicationContext(), getString(R.string.net_error), Toast.LENGTH_LONG).show();
+//                        new android.os.Handler().postDelayed(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                showVaults();
+//                            }
+//                        }, 30000);
+//                        return;
+//                    }
+//
+//                    SingleTon ton = getTon();
+//                    // Update the vault record to avoid future loads
+//                    ((HashMap<String, Vault>)ton.getExtra(SettingValues.VAULTS.toString())).put(result.guid, result);
+//
+//                    ton.addExtra(SettingValues.ACTIVE_VAULT.toString(), result);
+//                    showActiveVault();
+//                }
+//            });
+//
+//        }
+//    }
+
+//    void showUnlockVault() {
+//        Timber.d( "showUnlockVault" );
+//
+//        Vault v = (Vault) getTon().getExtra(SettingValues.ACTIVE_VAULT.toString());
+//        if (v.unlock(mSharedPreferences.getString(v.guid, ""))){
+//            Timber.d( "unlocked vault, show active" );
+//            showActiveVault();
+//            return;
+//        }
+//
+//        Timber.d( "show unlock vault fragment" );
+//        getSupportFragmentManager()
+//                .beginTransaction()
+//                .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_out_left, R.anim.slide_out_left)
+//                .replace( R.id.fragment_container, new VaultUnlockFragment(), "vault" )
+//                .addToBackStack(null)
+//                .commit();
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -306,7 +309,7 @@ public class PasswordList extends AppCompatActivity implements
                 showNotImplementedMessage();
                 return true;
             case android.R.id.home :
-                onBackPressed();
+                displayVaultList();
                 return true;
 
             case R.id.action_logout:
@@ -323,60 +326,49 @@ public class PasswordList extends AppCompatActivity implements
     {
         Timber.d( "LOGOUT!" );
 
-        SharedPreferences.Editor editor = settings.edit();
-        editor.remove( SettingValues.HOST.toString() );
-        editor.remove( SettingValues.USER.toString() );
-        editor.remove( SettingValues.PASSWORD.toString() );
-        editor.apply();
+        mDataStore.clear();
 
-        ton.removeString( SettingValues.HOST.toString() );
-        ton.removeString( SettingValues.USER.toString() );
-        ton.removeString( SettingValues.PASSWORD.toString() );
-
-        Intent restart = new Intent(this, SplashActivity.class);
-        restart.addFlags( Intent.FLAG_ACTIVITY_NO_HISTORY );
-        restart.addFlags( Intent.FLAG_ACTIVITY_CLEAR_TASK );
-        startActivity(restart);
-
-        finish();
+        recreate();
     }
 
     private void showNotImplementedMessage() {
         Toast.makeText(this, R.string.not_implemented_yet, Toast.LENGTH_SHORT).show();
     }
 
-    @Override
-    public void onListFragmentInteraction(Vault item) {
-        Timber.d( "selected vault: %s", item );
-        ton.addExtra(SettingValues.ACTIVE_VAULT.toString(), item);
+//    @Override
+//    public void onListFragmentInteraction(Vault item) {
+//        Timber.d( "selected vault: %s", item );
+//        getTon().addExtra(SettingValues.ACTIVE_VAULT.toString(), item);
+//
+//        // TODO: show progress...
+//
+//
+//
+//        showActiveVault();
+//    }
 
-        // TODO: show progress...
+//    @Override
+//    public void onListFragmentInteraction(Credential item) {
+//        Timber.d( "selected item: %s", item );
+//        getSupportFragmentManager()
+//                .beginTransaction()
+//                .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+//                .replace( R.id.content_password_list, CredentialFragment.newInstance( item.getGuid() ), "credential" )
+//                .addToBackStack(null)
+//                .commit();
+//    }
 
+//    @Override
+//    public void onVaultUnlock(Vault vault) {
+//        Timber.d( "unlock vault: %s", vault );
+//        getSupportFragmentManager().popBackStack();
+//        showActiveVault();
+//    }
 
+//    @Override
+//    public void onCredentialFragmentInteraction(Credential credential) {
+//        Timber.d( "cred interact: %s", credential);
+//    }
+//
 
-        showActiveVault();
-    }
-
-    @Override
-    public void onListFragmentInteraction(Credential item) {
-        Timber.d( "selected item: %s", item );
-        getSupportFragmentManager()
-                .beginTransaction()
-                .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-                .replace(R.id.content_password_list, CredentialDisplay.newInstance(item.getGuid()), "credential")
-                .addToBackStack(null)
-                .commit();
-    }
-
-    @Override
-    public void onVaultUnlock(Vault vault) {
-        Timber.d( "unlock vault: %s", vault );
-        getSupportFragmentManager().popBackStack();
-        showActiveVault();
-    }
-
-    @Override
-    public void onCredentialFragmentInteraction(Credential credential) {
-        Timber.d( "cred interact: %s", credential);
-    }
 }
