@@ -53,7 +53,7 @@ public class Credential extends Core implements Filterable {
     protected String files;
     protected String customFields;
     protected String otp;
-    protected boolean hidden;
+    protected int hidden;
     protected String sharedKey;
 
     protected Vault vault;
@@ -199,11 +199,11 @@ public class Credential extends Core implements Filterable {
     }
 
     public boolean isHidden() {
-        return hidden;
+        return hidden == 1;
     }
 
     public void setHidden(boolean hidden) {
-        this.hidden = hidden;
+        this.hidden = hidden ? 1 : 0;
     }
 
     public String getSharedKey() {
@@ -263,7 +263,7 @@ public class Credential extends Core implements Filterable {
         c.files = j.getString("files");
         c.customFields = j.getString("custom_fields");
         c.otp = j.getString("otp");
-        c.hidden = (j.getInt("hidden") > 0);
+        c.hidden = j.getInt( "hidden" );//(j.getInt("hidden") > 0);
         c.sharedKey = j.getString("shared_key");
 
         return c;
