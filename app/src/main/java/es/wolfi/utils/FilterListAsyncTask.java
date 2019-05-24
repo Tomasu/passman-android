@@ -28,10 +28,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
-import es.wolfi.app.passman.CredentialViewAdapter;
-import es.wolfi.app.passman.OnCredentialListFragmentInteractionListener;
-import es.wolfi.app.passman.OnListFragmentInteractionListener;
-import es.wolfi.app.passman.VaultViewAdapter;
+import es.wolfi.app.passman.ui.vault.CredentialViewAdapter;
+import es.wolfi.app.passman.ui.vault.OnCredentialListFragmentInteractionListener;
+import es.wolfi.app.passman.ui.vaultlist.OnListFragmentInteractionListener;
+import es.wolfi.app.passman.ui.vaultlist.VaultViewAdapter;
 import es.wolfi.passman.API.Credential;
 import es.wolfi.passman.API.Vault;
 

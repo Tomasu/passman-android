@@ -5,10 +5,10 @@ import dagger.Provides;
 import dagger.android.ContributesAndroidInjector;
 import dagger.multibindings.ClassKey;
 import dagger.multibindings.IntoMap;
-import es.wolfi.app.passman.CredentialFragment;
-import es.wolfi.app.passman.CredentialListFragment;
-import es.wolfi.app.passman.VaultListFragment;
-import es.wolfi.app.passman.VaultUnlockFragment;
+import es.wolfi.app.passman.ui.credential.CredentialFragment;
+import es.wolfi.app.passman.ui.vault.CredentialListFragment;
+import es.wolfi.app.passman.ui.vaultlist.VaultListFragment;
+import es.wolfi.app.passman.ui.vault.VaultUnlockFragment;
 
 /**
  * @version ${VERSION}

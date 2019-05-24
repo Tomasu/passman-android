@@ -35,6 +35,6 @@
         android:layout_marginLeft="0dp"
         android:layout_marginRight="0dp"
         app:layoutManager="LinearLayoutManager"
-        tools:context="es.wolfi.app.passman.VaultListFragment"
+        tools:context="es.wolfi.app.passman.ui.vaultlist.VaultListFragment"
         tools:listitem="@layout/fragment_vault" />
 </LinearLayout>

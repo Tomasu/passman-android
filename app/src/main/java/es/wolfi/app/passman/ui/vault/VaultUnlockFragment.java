@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package es.wolfi.app.passman;
+package es.wolfi.app.passman.ui.vault;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -41,6 +41,9 @@ import javax.inject.Inject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import es.wolfi.app.passman.DataStore;
+import es.wolfi.app.passman.R;
+import es.wolfi.app.passman.ui.BaseFragment;
 import es.wolfi.passman.API.Vault;
 import timber.log.Timber;
 

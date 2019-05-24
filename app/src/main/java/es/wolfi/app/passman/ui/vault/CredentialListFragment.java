@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package es.wolfi.app.passman;
+package es.wolfi.app.passman.ui.vault;
 
 import android.content.Context;
 import android.os.AsyncTask;
@@ -42,6 +42,9 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import es.wolfi.app.passman.DataStore;
+import es.wolfi.app.passman.R;
+import es.wolfi.app.passman.ui.BaseFragment;
 import es.wolfi.passman.API.Credential;
 import es.wolfi.passman.API.PassmanApi;
 import es.wolfi.passman.API.Vault;
@@ -60,7 +63,8 @@ import timber.log.Timber;
  * interface.
  */
 public
-class CredentialListFragment extends BaseFragment implements OnCredentialListFragmentInteractionListener
+class CredentialListFragment extends BaseFragment
+		implements OnCredentialListFragmentInteractionListener
 {
 	public static final String FRAG_TAG = "CREDENTIAL_LIST_FRAGMENT";
 

@@ -12,6 +12,8 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
+import es.wolfi.app.passman.ui.MainActivity;
+import es.wolfi.app.passman.ui.login.LoginActivity;
 import timber.log.Timber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -20,7 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * @version ${VERSION}
  * @since ${VERSION}
  */
-class NCAccountManagerCallback implements AccountManagerCallback< Bundle >
+public class NCAccountManagerCallback implements AccountManagerCallback< Bundle >
 {
 	private LoginActivity mActivity;
 
@@ -59,7 +61,7 @@ class NCAccountManagerCallback implements AccountManagerCallback< Bundle >
 
 			mActivity.onAuthenticated( host, username, authtoken );
 
-			PasswordList.launch( mActivity );
+			MainActivity.launch( mActivity );
 			mActivity.finish();
 		}
 		catch ( OperationCanceledException | IOException | AuthenticatorException e )

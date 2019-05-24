@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package es.wolfi.app.passman;
+package es.wolfi.app.passman.ui.vaultlist;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -38,6 +38,9 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import es.wolfi.app.passman.DataStore;
+import es.wolfi.app.passman.R;
+import es.wolfi.app.passman.ui.BaseFragment;
 import es.wolfi.passman.API.PassmanApi;
 import es.wolfi.passman.API.Vault;
 import io.reactivex.Single;
