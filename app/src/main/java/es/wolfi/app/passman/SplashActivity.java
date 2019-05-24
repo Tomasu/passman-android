@@ -10,6 +10,9 @@ import androidx.core.content.ContextCompat;
 
 import javax.inject.Inject;
 
+import es.wolfi.app.passman.ui.BaseActivity;
+import es.wolfi.app.passman.ui.MainActivity;
+import es.wolfi.app.passman.ui.login.LoginActivity;
 import timber.log.Timber;
 
 public
@@ -32,9 +35,9 @@ class SplashActivity extends BaseActivity
 		{
 			Timber.d( "have host! launch password list!" );
 
-			// go to PasswordList
+			// go to MainActivity
 			//
-			PasswordList.launch( this );
+			MainActivity.launch( this );
 
 			Timber.d( "finish!" );
 			finish();

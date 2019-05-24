@@ -1,4 +1,4 @@
-package es.wolfi.app.passman;
+package es.wolfi.app.passman.ui;
 
 import android.content.Context;
 
@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import javax.inject.Inject;
 
 import dagger.android.support.AndroidSupportInjection;
+import es.wolfi.app.passman.SingleTon;
 
 /**
  * @version ${VERSION}

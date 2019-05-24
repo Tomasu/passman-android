@@ -1,4 +1,4 @@
-package es.wolfi.app.passman;
+package es.wolfi.app.passman.ui.vault;
 
 import es.wolfi.passman.API.Credential;
 

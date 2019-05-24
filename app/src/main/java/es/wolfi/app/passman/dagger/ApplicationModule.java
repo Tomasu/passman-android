@@ -17,8 +17,8 @@ import dagger.Provides;
 import dagger.android.ContributesAndroidInjector;
 import dagger.android.support.AndroidSupportInjectionModule;
 import es.wolfi.app.passman.DataStore;
-import es.wolfi.app.passman.LoginActivity;
-import es.wolfi.app.passman.PasswordList;
+import es.wolfi.app.passman.ui.login.LoginActivity;
+import es.wolfi.app.passman.ui.MainActivity;
 import es.wolfi.app.passman.SplashActivity;
 
 /**
@@ -39,7 +39,7 @@ class ApplicationModule
 
 	@ContributesAndroidInjector
 	abstract
-	PasswordList contributePasswordListInjector();
+	MainActivity contributePasswordListInjector ();
 
 	@Provides
 	@Singleton
