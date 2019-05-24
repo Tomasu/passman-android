@@ -146,7 +146,7 @@ class VaultUnlockFragment extends BaseFragment
 			CredentialListFragment fragment = new CredentialListFragment();
 			getActivity().getSupportFragmentManager()
 					.beginTransaction()
-					.replace( R.id.fragment_container, fragment, CredentialListFragment.FRAG_TAG )
+					.replace( R.id.nav_host_fragment, fragment, CredentialListFragment.FRAG_TAG )
 					.commit();
 			return;
 		}

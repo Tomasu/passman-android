@@ -27,7 +27,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.fragment.app.FragmentManager;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -120,11 +120,14 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 		// TODO: logcat> TextInputLayout  I  EditText added is not a TextInputEditText. Please switch to using that class instead.
 		View view = inflater.inflate( R.layout.fragment_vault_list, container, false );
 
+		mRecyclerView = view.findViewById( R.id.list );
+
+		Timber.d( "onCreateView: setup view!" );
 		// Set the adapter
-		if ( view instanceof RecyclerView )
-		{
+//		if ( view instanceof RecyclerView )
+//		{
 			Context context = view.getContext();
-			mRecyclerView = (RecyclerView) view;
+			//mRecyclerView = (RecyclerView) view;
 
 			if ( mColumnCount <= 1 )
 			{
@@ -134,7 +137,7 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 			{
 				mRecyclerView.setLayoutManager( new GridLayoutManager( context, mColumnCount ) );
 			}
-		}
+	//	}
 
 		return view;
 	}
@@ -160,11 +163,15 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 	{
 		super.onResume();
 
+		Timber.d( "onResume!" );
+
 		if ( mDataStore.getNumVaults() < 1 )
 		{
 			// no vaults
 			if ( mListVaultsSingle == null )
 			{
+				Timber.d( "no vaults, fetch" );
+
 				// request list of vaults
 				mListVaultsSingle = mApi.listVaults().observeOn( AndroidSchedulers.mainThread() );
 				mDisposable.add( mListVaultsSingle.subscribeWith(
@@ -190,6 +197,9 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 	void updateList ()
 	{
 		List< Vault > vaultList = mDataStore.getVaults();
+
+		Timber.d( "update list: %d items", vaultList.size() );
+
 		VaultViewAdapter adapter = new VaultViewAdapter( vaultList, this );
 		mRecyclerView.setAdapter( adapter );
 	}
@@ -225,21 +235,12 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 	{
 		Timber.d( "vault is locked. show unlock frag" );
 
-		FragmentManager fragmentManager = getFragmentManager();
-		if (fragmentManager == null)
-		{
-			Timber.e( "wat?! fragment manager null?!" );
-			Snackbar.make( mRecyclerView, "frag maanger null?!" , Snackbar.LENGTH_LONG)
-					.show();
-			return;
-		}
+		Vault activeVault = mDataStore.getActiveVault();
+		Bundle args = new Bundle();
+		args.putString( "vault_name", activeVault.name );
 
-		VaultUnlockFragment vaultUnlockFragment = new VaultUnlockFragment();
-
-		fragmentManager.beginTransaction()
-				.replace( R.id.fragment_container, vaultUnlockFragment, VaultUnlockFragment.FRAG_TAG )
-				.addToBackStack( null )
-				.commit();
+		Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
+				.navigate( R.id.nav_vlist_to_vault_unlock, args );
 	}
 
 	private
@@ -247,19 +248,12 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 	{
 		Timber.d( "vault is unlocked, show vault!" );
 
-		FragmentManager fragmentManager = getFragmentManager();
-		if (fragmentManager == null)
-		{
-			Timber.e( "null fragment manager?!" );
-			Snackbar.make( mRecyclerView, "fragment manager null?!", Snackbar.LENGTH_LONG).show();
-			return;
-		}
+		Vault activeVault = mDataStore.getActiveVault();
+		Bundle args = new Bundle();
+		args.putString( "vault_name", activeVault.name );
 
-		CredentialListFragment credentialListFragment = new CredentialListFragment();
-		fragmentManager.beginTransaction()
-				.addToBackStack( null )
-				.replace( R.id.fragment_container, credentialListFragment, CredentialListFragment.FRAG_TAG )
-				.commit();
+		Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
+				.navigate( R.id.nav_vlist_to_credential_list, args );
 	}
 
 	private

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_toVaultListFragment">
+
+    <fragment
+        android:id="@+id/nav_toVaultListFragment"
+        android:name="es.wolfi.app.passman.VaultListFragment"
+        android:label="@string/vault_list_title"
+        tools:layout="@layout/fragment_vault_list">
+        <action android:id="@+id/nav_vlist_to_credential_list" app:destination="@id/nav_toCredentialListFragment" />
+        <action android:id="@+id/nav_vlist_to_vault_unlock" app:destination="@id/nav_toVaultUnlockFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_toVaultUnlockFragment"
+        android:name="es.wolfi.app.passman.VaultUnlockFragment"
+        android:label="@string/vault_unlock_title"
+        tools:layout="@layout/fragment_vault_lock_screen"
+        >
+        <action android:id="@+id/nav_unlock_to_credential_list" app:destination="@id/nav_toCredentialListFragment"/>
+        <argument android:name="vault_name" app:argType="string"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_toCredentialListFragment"
+        android:name="es.wolfi.app.passman.CredentialListFragment"
+        android:label="Credentials in {vault_name}"
+        tools:layout="@layout/fragment_credential_item_list">
+        <action android:id="@+id/nav_clist_to_cred" app:destination="@id/nav_toCredentialFragment"/>
+        <argument android:name="vault_name" app:argType="string"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_toCredentialFragment"
+        android:name="es.wolfi.app.passman.CredentialFragment"
+        android:label="Credential {credential_name}"
+        tools:layout="@layout/fragment_credential_display">
+        <argument android:name="credential_guid" app:argType="string"/>
+        <argument android:name="credential_name" app:argType="string"/>
+    </fragment>
+</navigation>

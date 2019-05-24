@@ -30,6 +30,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -141,7 +142,7 @@ class CredentialListFragment extends BaseFragment implements OnCredentialListFra
 			if (mVault == null)
 			{
 				Snackbar.make( container, "No active vault?!", Snackbar.LENGTH_LONG ).show();
-				getActivity().getSupportFragmentManager().popBackStack();
+				Navigation.findNavController(requireActivity(), R.id.nav_host_fragment).navigateUp();
 				return view;
 			}
 
@@ -225,7 +226,7 @@ class CredentialListFragment extends BaseFragment implements OnCredentialListFra
 		{
 			Snackbar.make( mRecyclerView, "Active vault not set?!", Snackbar.LENGTH_LONG )
 					.show();
-			getActivity().getSupportFragmentManager().popBackStack();
+			Navigation.findNavController( requireActivity(), R.id.nav_host_fragment ).navigateUp();
 		}
 	}
 
@@ -249,14 +250,13 @@ class CredentialListFragment extends BaseFragment implements OnCredentialListFra
 	public
 	void onListFragmentInteraction ( final Credential item )
 	{
-//		Timber.d( "selected item: %s", item.getGuid() );
-		CredentialFragment credentialFragment = CredentialFragment.newInstance( item.getGuid() );
+		Bundle args = new Bundle();
+		args.putString( "credential_guid", item.getGuid() );
+		args.putString( "credential_name", item.getLabel() );
 
-		getActivity().getSupportFragmentManager()
-				.beginTransaction()
-				.addToBackStack( null )
-				.replace( R.id.fragment_container, credentialFragment, CredentialFragment.FRAG_TAG)
-				.commit();
+		Navigation.findNavController( requireActivity(), R.id.nav_host_fragment )
+				.navigate( R.id.nav_clist_to_cred, args );
+
 	}
 
 	private
@@ -312,7 +312,7 @@ class CredentialListFragment extends BaseFragment implements OnCredentialListFra
 						.show();
 			}
 
-			getActivity().getSupportFragmentManager().popBackStack();
+			Navigation.findNavController( requireActivity(), R.id.nav_host_fragment ).navigateUp();
 		}
 	}
 }

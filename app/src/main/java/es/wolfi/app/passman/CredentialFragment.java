@@ -60,7 +60,7 @@ class CredentialFragment extends BaseFragment
 {
 	public static final String FRAG_TAG = "CREDENTIAL_ITEM";
 
-	public static String CREDENTIAL = "credential";
+	public static String CREDENTIAL = "credential_guid";
 
 	@BindView (R.id.credential_label)
 	TextView label;
@@ -123,7 +123,9 @@ class CredentialFragment extends BaseFragment
 		if ( getArguments() != null )
 		{
 			Vault activeVault = mDataStore.getActiveVault();
-			credential = activeVault.findCredentialByGUID( getArguments().getString( CREDENTIAL ) );
+			String guid = checkNotNull( getArguments().getString( CREDENTIAL ), "Null guid?!");
+
+			credential = activeVault.findCredentialByGUID( guid );
 			Timber.d( "credential: %s", credential );
 		}
 

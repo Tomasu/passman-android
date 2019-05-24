@@ -151,8 +151,10 @@ class Vault implements Filterable
 	}
 
 	public
-	Credential findCredentialByGUID ( String guid )
+	Credential findCredentialByGUID ( @NonNull String guid )
 	{
+		checkNotNull( guid, "Null guid?!" );
+
 		Credential found = StreamSupport.stream( credentials )
 				.filter( ( cred ) -> cred.guid.contentEquals( guid ) )
 				.findFirst()
