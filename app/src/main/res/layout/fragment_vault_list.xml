@@ -20,15 +20,21 @@
     * along with this program.  If not, see <http://www.gnu.org/licenses/>.
     *
 -->
-<androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/list"
-    android:name="es.wolfi.app.passman.VaultFragment"
-    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginLeft="0dp"
-    android:layout_marginRight="0dp"
-    app:layoutManager="LinearLayoutManager"
-    tools:context="es.wolfi.app.passman.VaultListFragment"
-    tools:listitem="@layout/fragment_vault" />
+    android:layout_width="match_parent"
+    >
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/list"
+        android:name="es.wolfi.app.passman.VaultFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="0dp"
+        android:layout_marginRight="0dp"
+        app:layoutManager="LinearLayoutManager"
+        tools:context="es.wolfi.app.passman.VaultListFragment"
+        tools:listitem="@layout/fragment_vault" />
+</LinearLayout>
