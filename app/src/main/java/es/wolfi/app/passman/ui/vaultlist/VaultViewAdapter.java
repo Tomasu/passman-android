@@ -20,7 +20,7 @@
  *
  */
 
-package es.wolfi.app.passman;
+package es.wolfi.app.passman.ui.vaultlist;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -35,6 +35,7 @@ import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import es.wolfi.app.passman.R;
 import es.wolfi.passman.API.Vault;
 import es.wolfi.utils.ColorUtils;
 
@@ -57,7 +58,7 @@ public class VaultViewAdapter extends RecyclerView.Adapter<VaultViewAdapter.View
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.fragment_vault, parent, false);
+                .inflate( R.layout.fragment_vault, parent, false );
         return new ViewHolder(view);
     }
 

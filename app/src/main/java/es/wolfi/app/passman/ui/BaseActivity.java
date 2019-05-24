@@ -1,4 +1,4 @@
-package es.wolfi.app.passman;
+package es.wolfi.app.passman.ui;
 
 import android.os.Bundle;
 

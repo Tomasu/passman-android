@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package es.wolfi.app.passman;
+package es.wolfi.app.passman.ui.login;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -49,6 +49,11 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import es.wolfi.app.passman.DataStore;
+import es.wolfi.app.passman.ICallback;
+import es.wolfi.app.passman.NCAccountManagerCallback;
+import es.wolfi.app.passman.R;
+import es.wolfi.app.passman.ui.BaseActivity;
 import es.wolfi.passman.API.PassmanApi;
 import timber.log.Timber;
 

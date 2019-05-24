@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package es.wolfi.app.passman;
+package es.wolfi.app.passman.ui;
 
 import android.content.Context;
 import android.content.Intent;
@@ -41,11 +41,14 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import es.wolfi.app.passman.DataStore;
+import es.wolfi.app.passman.R;
+import es.wolfi.app.passman.ui.login.LoginActivity;
 import es.wolfi.passman.API.PassmanApi;
 import timber.log.Timber;
 
 public
-class PasswordList extends BaseActivity
+class MainActivity extends BaseActivity
 {
 	public static final String FRAG_TAG_VAULTS = "vaults";
 
@@ -75,7 +78,7 @@ class PasswordList extends BaseActivity
 	public static
 	void launch ( Context c )
 	{
-		Intent i = new Intent( c, PasswordList.class );
+		Intent i = new Intent( c, MainActivity.class );
 		i.setFlags( Intent.FLAG_ACTIVITY_CLEAR_TASK );
 		c.startActivity( i );
 	}

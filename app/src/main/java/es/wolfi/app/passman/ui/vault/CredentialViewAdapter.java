@@ -19,7 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package es.wolfi.app.passman;
+package es.wolfi.app.passman.ui.vault;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,6 +31,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
+import es.wolfi.app.passman.R;
 import es.wolfi.passman.API.Credential;
 
 /**
@@ -51,7 +52,7 @@ public class CredentialViewAdapter extends RecyclerView.Adapter<CredentialViewAd
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.fragment_credential_item, parent, false);
+                .inflate( R.layout.fragment_credential_item, parent, false );
         return new ViewHolder(view);
     }
 
