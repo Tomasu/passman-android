@@ -25,4 +25,6 @@
     <string name="created">Created:</string>
     <string name="last_accessed">Last accessed:</string>
     <string name="search">Search</string>
+    <string name="vault_list_title">Vaults</string>
+    <string name="vault_unlock_title">Unlock Vault {vault_name}</string>
 </resources>
