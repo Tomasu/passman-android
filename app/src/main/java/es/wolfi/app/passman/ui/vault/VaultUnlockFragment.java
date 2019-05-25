@@ -21,15 +21,13 @@
 
 package es.wolfi.app.passman.ui.vault;
 
+import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
+import android.view.inputmethod.InputMethodManager;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -38,11 +36,11 @@ import com.google.android.material.snackbar.Snackbar;
 
 import javax.inject.Inject;
 
-import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import es.wolfi.app.passman.DataStore;
 import es.wolfi.app.passman.R;
+import es.wolfi.app.passman.databinding.FragmentVaultLockScreenBinding;
 import es.wolfi.app.passman.ui.BaseFragment;
 import es.wolfi.passman.API.Vault;
 import timber.log.Timber;
@@ -59,20 +57,13 @@ class VaultUnlockFragment extends BaseFragment
 
 	private Vault vault;
 
-	@BindView (R.id.fragment_vault_name)
-	TextView vault_name;
-	@BindView (R.id.fragment_vault_password)
-	EditText vault_password;
-	@BindView (R.id.fragment_vault_unlock)
-	Button btn_unlock;
-	@BindView (R.id.vault_lock_screen_chk_save_pw)
-	CheckBox chk_save;
-
 	@Inject
 	DataStore mDataStore;
 
 	private
-	RelativeLayout mRelativeLayout = null;
+	FragmentVaultLockScreenBinding mBinding;
+
+	private Handler mHandler;
 
 	public
 	VaultUnlockFragment ()
@@ -101,15 +92,15 @@ class VaultUnlockFragment extends BaseFragment
 	void onCreate ( Bundle savedInstanceState )
 	{
 		super.onCreate( savedInstanceState );
+		mHandler = new Handler();
 	}
 
 	@Override
 	public
 	View onCreateView ( LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
 	{
-		// Inflate the layout for this fragment
-		mRelativeLayout = (RelativeLayout) inflater.inflate( R.layout.fragment_vault_lock_screen, container, false );
-		return mRelativeLayout;
+		mBinding = FragmentVaultLockScreenBinding.inflate( inflater, container, false );
+		return mBinding.getRoot();
 	}
 
 	@Override
@@ -120,7 +111,20 @@ class VaultUnlockFragment extends BaseFragment
 		ButterKnife.bind( this, view );
 		vault = mDataStore.getActiveVault();
 		Timber.d( "Vault guid: %s", vault.guid );
-		vault_name.setText( vault.name );
+		mBinding.fragmentVaultName.setText( vault.name );
+
+		mHandler.post( new Runnable() {
+			@Override
+			public
+			void run ()
+			{
+				mBinding.fragmentVaultPassword.clearFocus();
+				mBinding.fragmentVaultPassword.requestFocus();
+				InputMethodManager im = (InputMethodManager) getActivity().getSystemService( Context.INPUT_METHOD_SERVICE );
+				im.toggleSoftInput( InputMethodManager.SHOW_IMPLICIT, InputMethodManager.HIDE_IMPLICIT_ONLY );
+			}
+		} );
+
 	}
 
 	@Override
@@ -133,28 +137,27 @@ class VaultUnlockFragment extends BaseFragment
 	@OnClick (R.id.fragment_vault_unlock)
 	void onBtnUnlockClick ()
 	{
-		String password = vault_password.getText().toString();
+		String password = mBinding.fragmentVaultPassword.getText().toString();
 		Timber.d( "onUnlockClick: %s", password );
 
 		if ( vault.unlock( password ) )
 		{
 			Timber.d( "successfully unlocked vault" );
 
-			if ( chk_save.isChecked() )
+			if ( mBinding.vaultLockScreenChkSavePw.isChecked() )
 			{
 				Timber.d( "save vault password" );
 				mDataStore.putVaultPassword( vault, password );
 			}
 
-			CredentialListFragment fragment = new CredentialListFragment();
-			getActivity().getSupportFragmentManager()
-					.beginTransaction()
-					.replace( R.id.nav_host_fragment, fragment, CredentialListFragment.FRAG_TAG )
-					.commit();
+			Bundle args = new Bundle();
+			args.putString( "vault_name", vault.name );
+			navigateTo( R.id.nav_unlock_to_credential_list, args );
+
 			return;
 		}
 
-		Snackbar.make( mRelativeLayout, getString( R.string.wrong_vault_pw ), Snackbar.LENGTH_LONG )
+		Snackbar.make( mBinding.getRoot(), getString( R.string.wrong_vault_pw ), Snackbar.LENGTH_LONG )
 				//.setAction( "Action", null )
 				.show();
 	}

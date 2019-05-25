@@ -12,7 +12,6 @@ import javax.inject.Inject;
 
 import es.wolfi.app.passman.ui.BaseActivity;
 import es.wolfi.app.passman.ui.MainActivity;
-import es.wolfi.app.passman.ui.login.LoginActivity;
 import timber.log.Timber;
 
 public
@@ -30,19 +29,6 @@ class SplashActivity extends BaseActivity
 		super.onCreate( savedInstanceState );
 
 		Timber.d( "onCreate" );
-
-		if (mDataStore.haveHost())
-		{
-			Timber.d( "have host! launch password list!" );
-
-			// go to MainActivity
-			//
-			MainActivity.launch( this );
-
-			Timber.d( "finish!" );
-			finish();
-			return;
-		}
 
 		// go to login
 
@@ -118,9 +104,23 @@ class SplashActivity extends BaseActivity
 
 	private void doLogin()
 	{
-		Timber.d( "go to login!" );
-		LoginActivity.launch( this, new LoginICallback() );
-		finish();
+		//if ( mDataStore.haveHost() )
+		{
+			//Timber.d( "have host! launch password list!" );
+
+			// go to MainActivity
+			//
+			MainActivity.launch( this );
+
+			Timber.d( "finish!" );
+			finish();
+//			return;
+		}
+
+//		Timber.d( "go to login!" );
+
+//		LoginActivity.launch( this, new LoginICallback() );
+//		finish();
 	}
 
 	private static

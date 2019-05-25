@@ -12,6 +12,9 @@
 -target 1.7
 -dontobfuscate
 
+-keep class com.github.druk.dnssd.** { *; }
+-keep interface com.github.druk.dnssd.** { *; }
+
 #-keep class java9.** { *; }
 #-keep interface java9.** { *; }
 #-dontwarn java9.**

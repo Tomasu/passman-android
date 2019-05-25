@@ -27,4 +27,8 @@
     <string name="search">Search</string>
     <string name="vault_list_title">Vaults</string>
     <string name="vault_unlock_title">Unlock Vault {vault_name}</string>
+    <string name="login_title">Login</string>
+    <string name="login_unauthorized">Unauthorized</string>
+    <string name="login_servererror">Server error</string>
+    <string name="login_unknownerror">Unknown error</string>
 </resources>

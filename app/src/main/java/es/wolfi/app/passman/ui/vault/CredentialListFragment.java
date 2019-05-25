@@ -44,6 +44,7 @@ import javax.inject.Inject;
 
 import es.wolfi.app.passman.DataStore;
 import es.wolfi.app.passman.R;
+import es.wolfi.app.passman.databinding.FragmentCredentialItemListBinding;
 import es.wolfi.app.passman.ui.BaseFragment;
 import es.wolfi.passman.API.Credential;
 import es.wolfi.passman.API.PassmanApi;
@@ -82,7 +83,7 @@ class CredentialListFragment extends BaseFragment
 	@Inject
 	PassmanApi mApi;
 
-	private RecyclerView mRecyclerView;
+	private FragmentCredentialItemListBinding mBinding;
 
 	private CompositeDisposable mDisposable = new CompositeDisposable();
 
@@ -124,7 +125,9 @@ class CredentialListFragment extends BaseFragment
 	View onCreateView (
 			LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
 	{
-		View view = inflater.inflate( R.layout.fragment_credential_item_list, container, false );
+		mBinding = FragmentCredentialItemListBinding.inflate( inflater, container, false );
+
+		View view = mBinding.getRoot();
 
 		// Set the adapter
 		View credentialView = view.findViewById( R.id.list );
@@ -132,14 +135,13 @@ class CredentialListFragment extends BaseFragment
 		{
 			Context context = credentialView.getContext();
 
-			mRecyclerView = (RecyclerView) credentialView;
 			if ( mColumnCount <= 1 )
 			{
-				mRecyclerView.setLayoutManager( new LinearLayoutManager( context ) );
+				mBinding.list.setLayoutManager( new LinearLayoutManager( context ) );
 			}
 			else
 			{
-				mRecyclerView.setLayoutManager( new GridLayoutManager( context, mColumnCount ) );
+				mBinding.list.setLayoutManager( new GridLayoutManager( context, mColumnCount ) );
 			}
 
 			mVault = mDataStore.getActiveVault();
@@ -152,7 +154,7 @@ class CredentialListFragment extends BaseFragment
 
 			final EditText searchInput = (EditText) view.findViewById( R.id.search_input );
 
-			searchInput.addTextChangedListener( new TextWatcher()
+			mBinding.searchInput.addTextChangedListener( new TextWatcher()
 			{
 				@Override
 				public
@@ -170,7 +172,7 @@ class CredentialListFragment extends BaseFragment
 					{
 						filterTask.cancel( true );
 					}
-					filterTask = new FilterListAsyncTask( searchText, mRecyclerView, CredentialListFragment.this );
+					filterTask = new FilterListAsyncTask( searchText, mBinding.list, CredentialListFragment.this );
 					ArrayList< Credential > input[] = new ArrayList[] { mVault.getCredentials() };
 					filterTask.execute( (Object[]) input );
 				}
@@ -183,7 +185,7 @@ class CredentialListFragment extends BaseFragment
 				}
 			} );
 
-			mRecyclerView.setAdapter( new CredentialViewAdapter( mVault.getCredentials(), this ) );
+			mBinding.list.setAdapter( new CredentialViewAdapter( mVault.getCredentials(), this ) );
 		}
 
 		return view;
@@ -228,7 +230,7 @@ class CredentialListFragment extends BaseFragment
 		}
 		else
 		{
-			Snackbar.make( mRecyclerView, "Active vault not set?!", Snackbar.LENGTH_LONG )
+			Snackbar.make( mBinding.list, "Active vault not set?!", Snackbar.LENGTH_LONG )
 					.show();
 			Navigation.findNavController( requireActivity(), R.id.nav_host_fragment ).navigateUp();
 		}
@@ -286,7 +288,7 @@ class CredentialListFragment extends BaseFragment
 //			Credential secondCred = mVault.getCredentials().get( 1 );
 //			Timber.d( "second cred email: %s", secondCred.getEmail() );
 
-			mRecyclerView.setAdapter( new CredentialViewAdapter( mVault.getCredentials(), CredentialListFragment.this ) );
+			mBinding.list.setAdapter( new CredentialViewAdapter( mVault.getCredentials(), CredentialListFragment.this ) );
 		}
 
 		@Override
@@ -301,18 +303,18 @@ class CredentialListFragment extends BaseFragment
 
 				if (httpException.code() == 403)
 				{
-					Snackbar.make( mRecyclerView, "Not authenticated!", Snackbar.LENGTH_LONG )
+					Snackbar.make( mBinding.list, "Not authenticated!", Snackbar.LENGTH_LONG )
 							.show();
 				}
 				else
 				{
-					Snackbar.make( mRecyclerView, "Request failed: " + httpException.message(), Snackbar.LENGTH_LONG )
+					Snackbar.make( mBinding.list, "Request failed: " + httpException.message(), Snackbar.LENGTH_LONG )
 							.show();
 				}
 			}
 			else
 			{
-				Snackbar.make( mRecyclerView, "unexpected error: " + e.getMessage(), Snackbar.LENGTH_LONG )
+				Snackbar.make( mBinding.list, "unexpected error: " + e.getMessage(), Snackbar.LENGTH_LONG )
 						.show();
 			}
 

@@ -40,6 +40,7 @@ import javax.inject.Inject;
 
 import es.wolfi.app.passman.DataStore;
 import es.wolfi.app.passman.R;
+import es.wolfi.app.passman.databinding.FragmentVaultListBinding;
 import es.wolfi.app.passman.ui.BaseFragment;
 import es.wolfi.passman.API.PassmanApi;
 import es.wolfi.passman.API.Vault;
@@ -67,6 +68,9 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 	private static final String ARG_COLUMN_COUNT = "column-count";
 	// TODO: Customize parameters
 	private int mColumnCount = 1;
+
+	private
+	FragmentVaultListBinding mBinding;
 
 	@Inject
 	PassmanApi mApi;
@@ -121,9 +125,10 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 			LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
 	{
 		// TODO: logcat> TextInputLayout  I  EditText added is not a TextInputEditText. Please switch to using that class instead.
-		View view = inflater.inflate( R.layout.fragment_vault_list, container, false );
+		mBinding = FragmentVaultListBinding.inflate( inflater, container, false );
+		View view = mBinding.getRoot();
 
-		mRecyclerView = view.findViewById( R.id.list );
+		mRecyclerView = mBinding.list;
 
 		Timber.d( "onCreateView: setup view!" );
 		// Set the adapter
@@ -258,6 +263,7 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 		Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
 				.navigate( R.id.nav_vlist_to_credential_list, args );
 	}
+
 
 	private
 	class ListVaultsDisposableObserver extends DisposableSingleObserver< List< Vault > >
