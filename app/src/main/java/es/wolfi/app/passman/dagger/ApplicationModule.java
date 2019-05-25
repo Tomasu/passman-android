@@ -17,9 +17,9 @@ import dagger.Provides;
 import dagger.android.ContributesAndroidInjector;
 import dagger.android.support.AndroidSupportInjectionModule;
 import es.wolfi.app.passman.DataStore;
-import es.wolfi.app.passman.ui.login.LoginActivity;
-import es.wolfi.app.passman.ui.MainActivity;
 import es.wolfi.app.passman.SplashActivity;
+import es.wolfi.app.passman.ui.MainActivity;
+import es.wolfi.app.passman.ui.login.LoginActivity;
 
 /**
  * @version ${VERSION}
@@ -66,6 +66,14 @@ class ApplicationModule
 	{
 		return AccountManager.get( context );
 	}
+
+//	@Provides
+//	@Singleton
+//	static
+//	DNSSD provideDNSSD( @GlobalContext Context context )
+//	{
+//		return new DNSSDEmbedded( context );
+//	}
 
 	@Provides
 	@Singleton

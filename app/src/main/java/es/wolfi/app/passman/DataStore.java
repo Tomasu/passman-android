@@ -30,12 +30,16 @@ public
 class DataStore
 {
 	private static final String VAULT_KEY_PREFIX = "__vault__";
-	public static final String ACTIVE_VAULT_KEY = "ACTIVE_VAULT";
-	public static final String VAULT_SET_KEY = "VAULT_SET";
+	private static final String ACTIVE_VAULT_KEY = "ACTIVE_VAULT";
+	private static final String VAULT_SET_KEY = "VAULT_SET";
 	private static final String VAULT_PASSWORD_KEY_PREFIX = "__vault_password__";
-	public static final String HOST_KEY = "HOST";
-	public static final String USER_KEY = "USER";
-	public static final String TOKEN_KEY = "TOKEN";
+	private static final String HOST_KEY = "HOST";
+	private static final String USER_KEY = "USER";
+	private static final String TOKEN_KEY = "TOKEN";
+	private static final String PASS_KEY = "PASS";
+	private static final String AUTH_TYPE_KEY = "AUTH_TYPE";
+	private static final String AUTH_TYPE_BASIC = "BASIC";
+	private static final String AUTH_TYPE_TOKEN = "TOKEN";
 
 	private Gson mGson;
 
@@ -45,6 +49,7 @@ class DataStore
 
 	private HashMap< String, Vault > mVaultMap;
 	private HashMap< String, String> mVaultPassMap;
+	private String mAuthType;
 
 	@Inject
 	public
@@ -55,6 +60,8 @@ class DataStore
 
 		mVaultMap = new HashMap<>();
 		mVaultPassMap = new HashMap<>();
+
+		mAuthType = mPreferences.getString( AUTH_TYPE_KEY, "" );
 
 		Set< String > vaultSet = mPreferences.getStringSet( VAULT_SET_KEY, null );
 		if ( vaultSet != null )
@@ -109,12 +116,38 @@ class DataStore
 	}
 
 	public
+	boolean isBasicAuth()
+	{
+		return mAuthType.contentEquals( AUTH_TYPE_BASIC );
+	}
+
+	public
+	boolean isTokenAuth()
+	{
+		return mAuthType.contains( AUTH_TYPE_TOKEN );
+	}
+
+	public
+	void setBasicAuth ( @NonNull String host, @NonNull String user, @NonNull String password )
+	{
+		SharedPreferences.Editor editor = mPreferences.edit();
+		editor.putString( HOST_KEY, host );
+		editor.putString( USER_KEY, user );
+		editor.putString( PASS_KEY, password );
+		editor.putString( AUTH_TYPE_KEY, AUTH_TYPE_BASIC );
+		mAuthType = AUTH_TYPE_BASIC;
+		editor.apply();
+	}
+
+	public
 	void setAccountInfo ( @NonNull String host, @NonNull String user, @NonNull String token )
 	{
 		SharedPreferences.Editor editor = mPreferences.edit();
 		editor.putString( HOST_KEY, host );
 		editor.putString( USER_KEY, user );
 		editor.putString( TOKEN_KEY, token );
+		editor.putString( AUTH_TYPE_KEY, AUTH_TYPE_TOKEN );
+		mAuthType = AUTH_TYPE_TOKEN;
 		editor.apply();
 	}
 
@@ -140,6 +173,12 @@ class DataStore
 	String getAuthToken()
 	{
 		return mPreferences.getString( TOKEN_KEY, null );
+	}
+
+	public
+	String getPassword()
+	{
+		return mPreferences.getString( PASS_KEY, null );
 	}
 
 	private
@@ -197,6 +236,8 @@ class DataStore
 		editor.remove( HOST_KEY );
 		editor.remove( USER_KEY );
 		editor.remove( TOKEN_KEY );
+		editor.remove( PASS_KEY );
+		editor.remove( AUTH_TYPE_KEY );
 		editor.apply();
 
 		mActiveVault = null;

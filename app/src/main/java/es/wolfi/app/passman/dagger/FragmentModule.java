@@ -1,14 +1,14 @@
 package es.wolfi.app.passman.dagger;
 
 import dagger.Module;
-import dagger.Provides;
 import dagger.android.ContributesAndroidInjector;
-import dagger.multibindings.ClassKey;
-import dagger.multibindings.IntoMap;
 import es.wolfi.app.passman.ui.credential.CredentialFragment;
+import es.wolfi.app.passman.ui.login.LoginBasicFragment;
+import es.wolfi.app.passman.ui.login.LoginClientV2Fragment;
+import es.wolfi.app.passman.ui.login.LoginFragment;
 import es.wolfi.app.passman.ui.vault.CredentialListFragment;
-import es.wolfi.app.passman.ui.vaultlist.VaultListFragment;
 import es.wolfi.app.passman.ui.vault.VaultUnlockFragment;
+import es.wolfi.app.passman.ui.vaultlist.VaultListFragment;
 
 /**
  * @version ${VERSION}
@@ -18,23 +18,25 @@ import es.wolfi.app.passman.ui.vault.VaultUnlockFragment;
 public abstract
 class FragmentModule
 {
-	@Provides
-	@IntoMap
-	@ClassKey (CredentialFragment.class)
-	static
-	CredentialFragment provideCredentialDisplay ()
-	{
-		return new CredentialFragment();
-	}
+	@ContributesAndroidInjector
+	abstract
+	LoginFragment contributeLoginFragment ();
 
-	@Provides
-	@IntoMap
-	@ClassKey (CredentialListFragment.class)
-	static
-	CredentialListFragment provideCredentialItemFragment ()
-	{
-		return new CredentialListFragment();
-	}
+	@ContributesAndroidInjector
+	abstract
+	LoginBasicFragment contributeLoginBasicFragment ();
+
+	@ContributesAndroidInjector
+	abstract
+	LoginClientV2Fragment contributeLoginClientFragment ();
+
+	@ContributesAndroidInjector
+	abstract
+	VaultListFragment contrubuteVaultListFragment ();
+
+	@ContributesAndroidInjector
+	abstract
+	VaultUnlockFragment contributeVaultListFragment ();
 
 	@ContributesAndroidInjector
 	abstract
@@ -43,12 +45,4 @@ class FragmentModule
 	@ContributesAndroidInjector
 	abstract
 	CredentialListFragment contributeCredentialItemFragment ();
-
-	@ContributesAndroidInjector
-	abstract
-	VaultListFragment contrubuteVaultListFragment();
-
-	@ContributesAndroidInjector
-	abstract
-	VaultUnlockFragment contributeVaultListFragment();
 }

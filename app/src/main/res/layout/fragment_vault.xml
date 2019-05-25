@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
     *  Passman Android App
     *
     * @copyright Copyright (c) 2016, Sander Brand (brantje@gmail.com)
@@ -21,74 +20,78 @@
     * along with this program.  If not, see <http://www.gnu.org/licenses/>.
     *
 -->
-<androidx.cardview.widget.CardView android:id="@+id/card_view"
-                                    xmlns:android="http://schemas.android.com/apk/res/android"
-                                    xmlns:card_view="http://schemas.android.com/apk/res-auto"
-                                    xmlns:tools="http://schemas.android.com/tools"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="center"
-                                    android:layout_marginLeft="@dimen/activity_horizontal_margin"
-                                    android:layout_marginRight="@dimen/activity_horizontal_margin"
-                                    android:layout_marginTop="14dp"
-                                    card_view:cardCornerRadius="0dp"
-                                    card_view:cardElevation="5dp">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <LinearLayout
+    <androidx.cardview.widget.CardView
+        android:id="@+id/card_view"
+
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/activity_horizontal_margin">
+        android:layout_gravity="center"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="14dp"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        card_view:cardCornerRadius="0dp"
+        card_view:cardElevation="5dp">
 
-        <TextView
-            android:id="@+id/vault_name"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceListItem"
-            android:textStyle="bold"
-            tools:text="Vault Name"/>
+            android:orientation="vertical"
+            android:padding="@dimen/activity_horizontal_margin">
 
-        <TableLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/vault_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceListItem"
+                android:textStyle="bold"
+                tools:text="Vault Name" />
 
-            <TableRow>
+            <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-                <TextView
-                    android:id="@+id/vault_created_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:text="@string/created"
-                    android:paddingRight="8dp" />
+                <TableRow>
 
-                <TextView
-                    android:id="@+id/vault_created"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    tools:text="21/01/1990"/>
-            </TableRow>
+                    <TextView
+                        android:id="@+id/vault_created_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingRight="8dp"
+                        android:text="@string/created"
+                        android:textSize="12sp" />
 
-            <TableRow>
+                    <TextView
+                        android:id="@+id/vault_created"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        tools:text="21/01/1990" />
+                </TableRow>
 
-                <TextView
-                    android:id="@+id/vault_last_access_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:text="@string/last_accessed"
-                    android:paddingRight="8dp" />
+                <TableRow>
 
-                <TextView
-                    android:id="@+id/vault_last_access"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    tools:text="21/01/1990"/>
-            </TableRow>
+                    <TextView
+                        android:id="@+id/vault_last_access_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingRight="8dp"
+                        android:text="@string/last_accessed"
+                        android:textSize="12sp" />
 
-        </TableLayout>
+                    <TextView
+                        android:id="@+id/vault_last_access"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        tools:text="21/01/1990" />
+                </TableRow>
 
-    </LinearLayout>
-</androidx.cardview.widget.CardView>
+            </TableLayout>
+
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+</layout>

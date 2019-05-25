@@ -29,8 +29,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.LinearInterpolator;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -42,11 +40,8 @@ import org.apache.commons.codec.binary.Base32;
 
 import javax.inject.Inject;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import es.wolfi.app.passman.CopyTextItem;
 import es.wolfi.app.passman.DataStore;
-import es.wolfi.app.passman.R;
+import es.wolfi.app.passman.databinding.FragmentCredentialDisplayBinding;
 import es.wolfi.app.passman.ui.BaseFragment;
 import es.wolfi.passman.API.Credential;
 import es.wolfi.passman.API.Vault;
@@ -66,22 +61,8 @@ class CredentialFragment extends BaseFragment
 
 	public static String CREDENTIAL = "credential_guid";
 
-	@BindView (R.id.credential_label)
-	TextView label;
-	@BindView (R.id.credential_user)
-	CopyTextItem user;
-	@BindView (R.id.credential_password)
-	CopyTextItem password;
-	@BindView (R.id.credential_email)
-	CopyTextItem email;
-	@BindView (R.id.credential_url)
-	TextView url;
-	@BindView (R.id.credential_description)
-	TextView description;
-	@BindView (R.id.credential_otp)
-	CopyTextItem otp;
-	@BindView (R.id.credential_otp_progress)
-	ProgressBar otp_progress;
+	private
+	FragmentCredentialDisplayBinding mBinding;
 
 	@Inject
 	DataStore mDataStore;
@@ -141,15 +122,15 @@ class CredentialFragment extends BaseFragment
 			void run ()
 			{
 				int progress = (int) ( System.currentTimeMillis() / 1000 ) % 30;
-				otp_progress.setProgress( progress * 100 );
+				mBinding.credentialOtpProgress.setProgress( progress * 100 );
 
-				ObjectAnimator animation = ObjectAnimator.ofInt( otp_progress, "progress",
+				ObjectAnimator animation = ObjectAnimator.ofInt( mBinding.credentialOtpProgress, "progress",
 																				 ( progress + 1 ) * 100 );
 				animation.setDuration( 1000 );
 				animation.setInterpolator( new LinearInterpolator() );
 				animation.start();
 
-				otp.setText( TOTPHelper.generate( new Base32().decode( credential.getOtp() ) ) );
+				mBinding.credentialOtp.setText( TOTPHelper.generate( new Base32().decode( credential.getOtp() ) ) );
 				handler.postDelayed( this, 1000 );
 			}
 		};
@@ -177,7 +158,8 @@ class CredentialFragment extends BaseFragment
 			LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
 	{
 		// Inflate the layout for this fragment
-		return inflater.inflate( R.layout.fragment_credential_display, container, false );
+		mBinding = FragmentCredentialDisplayBinding.inflate( inflater, container, false );
+		return mBinding.getRoot();
 	}
 
 	@Override
@@ -192,17 +174,16 @@ class CredentialFragment extends BaseFragment
 	void onViewCreated ( View view, @Nullable Bundle savedInstanceState )
 	{
 		super.onViewCreated( view, savedInstanceState );
-		ButterKnife.bind( this, view );
 
-		label.setText( credential.getLabel() );
-		user.setText( credential.getUsername() );
-		password.setModePassword();
-		password.setText( credential.getPassword() );
-		email.setModeEmail();
-		email.setText( credential.getEmail() );
-		url.setText( credential.getUrl() );
-		description.setText( credential.getDescription() );
-		otp.setEnabled( false );
+		mBinding.credentialLabel.setText( credential.getLabel() );
+		mBinding.credentialUser.setText( credential.getUsername() );
+		mBinding.credentialPassword.setModePassword();
+		mBinding.credentialPassword.setText( credential.getPassword() );
+		mBinding.credentialEmail.setModeEmail();
+		mBinding.credentialEmail.setText( credential.getEmail() );
+		mBinding.credentialUrl.setText( credential.getUrl() );
+		mBinding.credentialDescription.setText( credential.getDescription() );
+		mBinding.credentialOtp.setEnabled( false );
 	}
 
 	@Override

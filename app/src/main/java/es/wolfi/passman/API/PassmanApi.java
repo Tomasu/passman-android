@@ -46,7 +46,14 @@ class PassmanApi
 	void setHost ( @NonNull String host )
 	{
 		Timber.d("set host! %s", host);
-		mRequestInterceptor.setHost( host + "/index.php/apps/passman/api/v2/");
+		mRequestInterceptor.setHost( "https://" + host + "/index.php/apps/passman/api/v2");
+	}
+
+	public
+	void setBasicCreds( @NonNull final String username, @NonNull final String password )
+	{
+		mUserName = username;
+		mRequestInterceptor.setBasicCreds( username, password );
 	}
 
 	public

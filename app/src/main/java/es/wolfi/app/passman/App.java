@@ -55,8 +55,15 @@ class App extends Application implements HasActivityInjector, HasSupportFragment
 		{
 			Timber.d( "have host! setup stuff!" );
 			mApi.setHost( mDataStore.getHost() );
-			mApi.setUserName( mDataStore.getUserName() );
-			mApi.setAuthToken( mDataStore.getAuthToken() );
+			if (mDataStore.isTokenAuth())
+			{
+				mApi.setUserName( mDataStore.getUserName() );
+				mApi.setAuthToken( mDataStore.getAuthToken() );
+			}
+			else if (mDataStore.isBasicAuth())
+			{
+				mApi.setBasicCreds( mDataStore.getUserName(), mDataStore.getPassword() );
+			}
 		}
 	}
 
