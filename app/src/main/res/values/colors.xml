@@ -18,4 +18,12 @@
     <color name="secondary_button_text_color">@color/black</color>
 
     <color name="transparent">#00000000</color>
+
+
+    <color name="unpressed_color">#fff44336</color>
+    <color name="pressed_color">#ffd32f2f</color>
+    <color name="ripple_color">#ffeeeeee</color>
+    <color name="Black">#000</color>
+    <color name="fbutton_default_color">#3eadeb</color>
+    <color name="fbutton_default_shadow_color">#ff3493c8</color>
 </resources>

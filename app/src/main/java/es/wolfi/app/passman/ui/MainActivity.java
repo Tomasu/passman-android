@@ -29,10 +29,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
+import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
@@ -43,7 +47,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import es.wolfi.app.passman.DataStore;
 import es.wolfi.app.passman.R;
-import es.wolfi.app.passman.ui.login.LoginActivity;
 import es.wolfi.passman.API.PassmanApi;
 import timber.log.Timber;
 
@@ -105,6 +108,15 @@ class MainActivity extends BaseActivity
 		NavigationUI.setupActionBarWithNavController( this, mNavController );
 		NavigationUI.setupWithNavController( toolbar, mNavController, mAppBarConfiguration );
 
+		mNavController.addOnDestinationChangedListener(
+				new NavDestinationChangedListener( getSupportActionBar() ) );
+
+		if (!mDataStore.haveHost())
+		{
+			mNavController.popBackStack();
+			mNavController.navigate( R.id.nav_toLogin );
+		}
+
 		running = true;
 	}
 
@@ -112,8 +124,31 @@ class MainActivity extends BaseActivity
 	public
 	boolean onSupportNavigateUp ()
 	{
+		Timber.d( "onSupportNavigateUp: %s", mNavController.getCurrentDestination() );
+		if (mNavController.getCurrentDestination().getId() == R.id.nav_toVaultListFragment)
+		{
+			Timber.d( "onSupportNavigateUp have vault list frag" );
+			finish();
+			return true;
+		}
+
 		return NavigationUI.navigateUp( mNavController, mAppBarConfiguration )
 				|| super.onSupportNavigateUp();
+	}
+
+	@Override
+	public
+	void onBackPressed ()
+	{
+		Timber.d( "onBackPressed: %s", mNavController.getCurrentDestination().getLabel() );
+		if ( mNavController.getCurrentDestination().getId() == R.id.nav_toVaultListFragment )
+		{
+			Timber.d( "onBackPressed have vault list frag" );
+			finish();
+			return;
+		}
+
+		super.onBackPressed();
 	}
 
 	@Override
@@ -165,8 +200,17 @@ class MainActivity extends BaseActivity
 			}
 		}
 
-		Timber.d( "navigate to vault list!" );
-		mNavController.navigate( R.id.nav_toVaultListFragment );
+		if ( mDataStore.haveHost() )
+		{
+			// assume we're logged in here...
+
+			Timber.d( "navigate to vault list!" );
+
+			mNavController.navigate( R.id.nav_toVaultListFragment );
+			return;
+		}
+
+		//mNavController.navigate( R.id.nav_toVaultListFragment );
 	}
 
 	@Override
@@ -213,12 +257,52 @@ class MainActivity extends BaseActivity
 
 		mDataStore.clear();
 
-		LoginActivity.launch( this, null );
+		NavOptions navOptions = new NavOptions.Builder()
+				.setPopUpTo( R.id.nav_toVaultListFragment, true ).build();
+		mNavController.navigate( R.id.nav_toLogin, null, navOptions );
+		//LoginActivity.launch( this, null );
 	}
 
 	private
 	void showNotImplementedMessage ()
 	{
 		Toast.makeText( this, R.string.not_implemented_yet, Toast.LENGTH_SHORT ).show();
+	}
+
+	private static
+	class NavDestinationChangedListener implements NavController.OnDestinationChangedListener
+	{
+		private final ActionBar mToolbar;
+
+		public
+		NavDestinationChangedListener ( final ActionBar toolbar ) {mToolbar = toolbar;}
+
+		@Override
+		public
+		void onDestinationChanged (
+				@NonNull final NavController controller, @NonNull final NavDestination destination,
+				@Nullable final Bundle arguments )
+		{
+			int navId = destination.getId();
+			if ( navId == R.id.nav_toLogin || navId == R.id.nav_toLoginClient
+					|| navId == R.id.nav_toLoginBasic
+				/*|| navId == R.id.nav_toLoginNCApp*/ )
+			{
+				mToolbar.hide();
+			}
+			else
+			{
+				mToolbar.show();
+				if (navId == R.id.nav_toVaultListFragment)
+				{
+					mToolbar.setDisplayHomeAsUpEnabled( false );
+					mToolbar.setDisplayShowHomeEnabled( true );
+				}
+				else
+				{
+					mToolbar.setDisplayHomeAsUpEnabled( true );
+				}
+			}
+		}
 	}
 }

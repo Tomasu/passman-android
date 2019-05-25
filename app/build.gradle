@@ -43,7 +43,7 @@ android {
 
 		}
 		ndk {
-			abiFilters 'armeabi-v7a' //, 'arm64-v8a'
+			abiFilters 'armeabi-v7a' //, 'x86' //, 'arm64-v8a'
 		}
 	}
 	buildTypes {
@@ -84,6 +84,11 @@ android {
 			shrinkResources false
 			proguardFiles getDefaultProguardFile( 'proguard-android.txt' ), 'proguard-rules.pro'
 		}
+
+	}
+
+	dataBinding {
+		enabled = true
 	}
 
 	externalNativeBuild {
@@ -113,13 +118,9 @@ android {
 
 gradle.projectsEvaluated {
 	tasks.withType( JavaCompile ) {
-		options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked" \
-			<< "-Xmaxerrs" << "500" // see: https://github.com/google/dagger/issues/306
+		options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked" << "-Xmaxerrs" << "500"
+		// see: https://github.com/google/dagger/issues/306
 	}
-}
-
-repositories {
-	maven { url "https://jitpack.io" }
 }
 
 dependencies {
@@ -143,6 +144,12 @@ dependencies {
 
 	implementation "com.google.android.material:material:1.0.0"
 
+	implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
+	implementation "androidx.lifecycle:lifecycle-common-java8:2.0.0"
+	implementation "androidx.lifecycle:lifecycle-reactivestreams:2.0.0"
+	implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:1.0.0-alpha01"
+
+
 	annotationProcessor 'com.jakewharton:butterknife-compiler:10.1.0'
 	implementation 'com.jakewharton:butterknife:10.1.0'
 
@@ -151,14 +158,15 @@ dependencies {
 	implementation 'com.google.dagger:dagger:2.22.1'
 	annotationProcessor 'com.google.dagger:dagger-compiler:2.22.1'
 	implementation 'com.google.dagger:dagger-android:2.22.1'
-	implementation 'com.google.dagger:dagger-android-support:2.22.1' // if you use the support libraries
+	implementation 'com.google.dagger:dagger-android-support:2.22.1'
+	// if you use the support libraries
 	annotationProcessor 'com.google.dagger:dagger-android-processor:2.22.1'
 
 	implementation 'com.github.bumptech.glide:glide:4.9.0'
 	annotationProcessor 'com.github.bumptech.glide:compiler:4.9.0'
 
 
-	implementation "com.github.nextcloud:Android-SingleSignOn:0.3.0"
+	//implementation "com.github.nextcloud:Android-SingleSignOn:0.3.0"
 	//implementation "com.github.nextcloud:Android-SingleSignOn:master-SNAPSHOT"
 
 	implementation 'io.reactivex.rxjava2:rxjava:2.2.8'
@@ -171,11 +179,13 @@ dependencies {
 	implementation 'com.squareup.retrofit2:converter-gson:2.5.0'
 	implementation 'com.squareup.retrofit2:adapter-rxjava2:2.5.0'
 
+	implementation 'com.github.andriydruk:dnssd:0.9.13'
+
 	testImplementation 'junit:junit:4.12'
 	androidTestImplementation( 'androidx.test.espresso:espresso-core:3.1.0', {
 		exclude group: 'com.android.support', module: 'support-annotations'
 	} )
 
-
+	testImplementation "androidx.arch.core:core-testing:2.0.1"
 
 }

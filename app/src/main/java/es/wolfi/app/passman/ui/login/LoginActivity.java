@@ -147,35 +147,6 @@ class LoginActivity extends BaseActivity
 	private
 	void getAccount ()
 	{
-		//        Intent chooseIntent = AccountPicker.newChooseAccountIntent( null,
-		//        null, new String[]{"nextcloud"},true, null, "org.nextcloud", null,
-		//        null );
-		//        startActivityForResult( chooseIntent, REQ_CHOOSE_ACCOUNT );
-
-		//		List< Account > accountsImporter = AccountImporter.findAccounts( this );
-		//		Timber.d( "accounts Importer: %d", accountsImporter.size() );
-
-		//Intent chooseIntent = AccountManager.newChooseAccountIntent( null,
-		// null, new String[] { "nextcloud"} , false,null,"org.nextcloud",
-		// null, null);
-		//startActivityForResult( chooseIntent, REQ_CHOOSE_ACCOUNT );
-
-		//        if ( android.os.Build.VERSION.SDK_INT >= android.os.Build
-		//        .VERSION_CODES.M )
-		//        {
-		//            Intent intent =
-		//                  AccountManager.newChooseAccountIntent( null, null,
-		//                                                         new String[] {
-		//                                                         "nextcloud" },
-		//                                                         false,
-		//                                                         null,
-		//                                                         "org.nextcloud",
-		//                                                         null,
-		//                                                         null );
-		//
-		//            startActivityForResult( intent, REQ_CHOOSE_ACCOUNT );
-		//        }
-
 		AccountManager accountManager = AccountManager.get( this );
 		Account[] accountsByTypeNextcloud = accountManager.getAccountsByType( "nextcloud" );
 		Timber.d( "accounts Nextcloud: %d", accountsByTypeNextcloud.length );

@@ -5,23 +5,81 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/nav_toVaultListFragment">
 
+    <action
+        android:id="@+id/nav_logout"
+        app:destination="@id/nav_toLogin" />
+
+    <fragment
+        android:id="@+id/nav_toLogin"
+        android:name="es.wolfi.app.passman.ui.login.LoginFragment"
+        android:label="@string/login_title"
+        tools:layout="@layout/fragment_login">
+        <action
+            android:id="@+id/nav_login_to_loginBasic"
+            app:destination="@id/nav_toLoginBasic">
+            <!-- argument android:name="hostname" app:argType="string"/ -->
+        </action>
+        <action
+            android:id="@+id/nav_login_to_loginClient"
+            app:destination="@id/nav_toLoginClient" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_toLoginBasic"
+        android:name="es.wolfi.app.passman.ui.login.LoginBasicFragment"
+        android:label="@string/login_title"
+        tools:layout="@layout/fragment_login_basic">
+        <argument
+            android:name="hostname"
+            app:argType="string" />
+
+        <action
+            android:id="@+id/nav_loginBasic_to_vlist"
+            app:destination="@id/nav_toVaultListFragment"
+            />
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_toLoginClient"
+        android:name="es.wolfi.app.passman.ui.login.LoginClientV2Fragment"
+        android:label="@string/login_title"
+        tools:layout="@layout/fragment_login_client_v2">
+        <action
+            android:id="@+id/nav_login_client_to_vlist"
+            app:destination="@id/nav_toVaultListFragment"
+            />
+    </fragment>
+
     <fragment
         android:id="@+id/nav_toVaultListFragment"
         android:name="es.wolfi.app.passman.ui.vaultlist.VaultListFragment"
         android:label="@string/vault_list_title"
         tools:layout="@layout/fragment_vault_list">
-        <action android:id="@+id/nav_vlist_to_credential_list" app:destination="@id/nav_toCredentialListFragment" />
-        <action android:id="@+id/nav_vlist_to_vault_unlock" app:destination="@id/nav_toVaultUnlockFragment" />
+        <action
+            android:id="@+id/nav_vlist_to_credential_list"
+            app:destination="@id/nav_toCredentialListFragment"
+            />
+        <action
+            android:id="@+id/nav_vlist_to_vault_unlock"
+            app:destination="@id/nav_toVaultUnlockFragment"
+            app:popUpTo="@id/nav_toLogin"
+            app:popUpToInclusive="true"
+            />
     </fragment>
 
     <fragment
         android:id="@+id/nav_toVaultUnlockFragment"
         android:name="es.wolfi.app.passman.ui.vault.VaultUnlockFragment"
         android:label="@string/vault_unlock_title"
-        tools:layout="@layout/fragment_vault_lock_screen"
-        >
-        <action android:id="@+id/nav_unlock_to_credential_list" app:destination="@id/nav_toCredentialListFragment"/>
-        <argument android:name="vault_name" app:argType="string"/>
+        tools:layout="@layout/fragment_vault_lock_screen">
+        <action
+            android:id="@+id/nav_unlock_to_credential_list"
+            app:destination="@id/nav_toCredentialListFragment"
+            app:popUpTo="@id/nav_toLogin"
+            app:popUpToInclusive="true"/>
+        <argument
+            android:name="vault_name"
+            app:argType="string" />
     </fragment>
 
     <fragment
@@ -29,8 +87,12 @@
         android:name="es.wolfi.app.passman.ui.vault.CredentialListFragment"
         android:label="Credentials in {vault_name}"
         tools:layout="@layout/fragment_credential_item_list">
-        <action android:id="@+id/nav_clist_to_cred" app:destination="@id/nav_toCredentialFragment"/>
-        <argument android:name="vault_name" app:argType="string"/>
+        <action
+            android:id="@+id/nav_clist_to_cred"
+            app:destination="@id/nav_toCredentialFragment" />
+        <argument
+            android:name="vault_name"
+            app:argType="string" />
     </fragment>
 
     <fragment
@@ -38,7 +100,11 @@
         android:name="es.wolfi.app.passman.ui.credential.CredentialFragment"
         android:label="Credential {credential_name}"
         tools:layout="@layout/fragment_credential_display">
-        <argument android:name="credential_guid" app:argType="string"/>
-        <argument android:name="credential_name" app:argType="string"/>
+        <argument
+            android:name="credential_guid"
+            app:argType="string" />
+        <argument
+            android:name="credential_name"
+            app:argType="string" />
     </fragment>
 </navigation>
