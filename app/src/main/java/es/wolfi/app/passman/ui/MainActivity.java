@@ -24,16 +24,20 @@ package es.wolfi.app.passman.ui;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.widget.AppCompatImageButton;
+import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
 import androidx.navigation.NavOptions;
@@ -41,12 +45,13 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import java.util.Iterator;
+
 import javax.inject.Inject;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
 import es.wolfi.app.passman.DataStore;
 import es.wolfi.app.passman.R;
+import es.wolfi.app.passman.databinding.ActivityMainBinding;
 import es.wolfi.passman.API.PassmanApi;
 import timber.log.Timber;
 
@@ -60,18 +65,18 @@ class MainActivity extends BaseActivity
 	@Inject
 	SharedPreferences mSharedPreferences;
 
-	@BindView (R.id.content)
-	CoordinatorLayout mCoordinatorLayout;
-
 	private NavController mNavController;
 
 	private AppBarConfiguration mAppBarConfiguration;
+
+	ActivityMainBinding mBinding;
 
 	@Inject
 	PassmanApi mApi;
 
 	@Inject
 	DataStore mDataStore;
+	private MenuItem mSearchItem;
 
 	/**
 	 * Displays this activity
@@ -93,14 +98,13 @@ class MainActivity extends BaseActivity
 		Timber.d( "onCreate!" );
 
 		super.onCreate( savedInstanceState );
-		setContentView( R.layout.activity_password_list );
-
-		ButterKnife.bind( this );
+		mBinding = ActivityMainBinding.inflate( getLayoutInflater() );
+		setContentView( mBinding.getRoot() );
 
 		Toolbar toolbar = (Toolbar) findViewById( R.id.toolbar );
+		toolbar.setNavigationIcon( R.drawable.ic_home );
+
 		setSupportActionBar( toolbar );
-		getSupportActionBar().setHomeButtonEnabled( true );
-		getSupportActionBar().setDisplayHomeAsUpEnabled( false );
 
 		mNavController = Navigation.findNavController( this, R.id.nav_host_fragment );
 		mAppBarConfiguration = new AppBarConfiguration.Builder( mNavController.getGraph() ).build();
@@ -109,7 +113,7 @@ class MainActivity extends BaseActivity
 		NavigationUI.setupWithNavController( toolbar, mNavController, mAppBarConfiguration );
 
 		mNavController.addOnDestinationChangedListener(
-				new NavDestinationChangedListener( getSupportActionBar() ) );
+				new NavDestinationChangedListener( this ) );
 
 		if (!mDataStore.haveHost())
 		{
@@ -213,12 +217,119 @@ class MainActivity extends BaseActivity
 		//mNavController.navigate( R.id.nav_toVaultListFragment );
 	}
 
+	String getViewName (@IdRes int id )
+	{
+		if (id == -1)
+		{
+			return "no-id";
+		}
+
+		try
+		{
+			return getResources().getResourceName( id );
+		} catch ( Resources.NotFoundException e )
+		{
+			return "not-found";
+		}
+	}
+
+	void recurseView (String pfx, @NonNull ViewGroup group )
+	{
+		Timber.d( "%s%s %s", pfx, group.getClass().getSimpleName(), getViewName( group.getId() ) );
+
+		for ( int i = 0; i < group.getChildCount(); i++ )
+		{
+			View v = group.getChildAt( i );
+
+			if (v instanceof ViewGroup)
+			{
+				recurseView( pfx + "   ", (ViewGroup) v );
+			}
+			else
+			{
+				Timber.d( "%s%s %s", pfx + "   ", v.getClass().getSimpleName(), getViewName( v.getId() ) );
+			}
+		}
+	}
+
 	@Override
 	public
 	boolean onCreateOptionsMenu ( Menu menu )
 	{
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate( R.menu.menu_password_list, menu );
+
+		mSearchItem = menu.findItem( R.id.action_search );
+		SearchView searchView = (SearchView) mSearchItem.getActionView();
+
+		//searchView.setBackgroundColor( getResources().getColor( R.color.pressed_color ) );
+
+
+		searchView.setOnSearchClickListener( new View.OnClickListener() {
+			@Override
+			public
+			void onClick ( final View v )
+			{
+				Timber.d( "on search click!" );
+				recurseView( "", mBinding.toolbar );
+
+				for ( int i = 0; i < mBinding.toolbar.getChildCount(); i++ )
+				{
+					View vv = mBinding.toolbar.getChildAt( i );
+					if ( vv instanceof AppCompatImageButton )
+					{
+						int curDest = mNavController.getCurrentDestination().getId();
+						if (mNavController.getGraph().getStartDestination() == curDest)
+						{
+							// got the home/back button
+							// set it to the home icon since we don't want it
+							// to be the back button when at the home screen
+
+							Timber.d( "cur dest: %s", getResources().getResourceName( curDest ) );
+							AppCompatImageButton imageButton = (AppCompatImageButton) vv;
+							imageButton.setImageResource( R.drawable.ic_home );
+							break;
+						}
+					}
+				}
+			}
+		} );
+
+		searchView.setOnCloseListener( new SearchView.OnCloseListener() {
+			@Override
+			public
+			boolean onClose ()
+			{
+				Timber.d( "search closed!" );
+				return false;
+			}
+		} );
+
+		searchView.setOnQueryTextListener( new SearchView.OnQueryTextListener() {
+			@Override
+			public
+			boolean onQueryTextSubmit ( final String query )
+			{
+				Timber.d( "text submit: %s", query );
+				if (!searchView.isIconified())
+				{
+					searchView.setIconified( true );
+				}
+
+				searchView.setQuery( query, false );
+				//searchItem.collapseActionView();
+				return false;
+			}
+
+			@Override
+			public
+			boolean onQueryTextChange ( final String newText )
+			{
+				Timber.d( "text change: %s", newText );
+				return false;
+			}
+		} );
+
 		return true;
 	}
 
@@ -245,9 +356,21 @@ class MainActivity extends BaseActivity
 				onLogoutPressed();
 				return true;
 
+//			case R.id.action_search:
+//				onActionSearch();
+//				return true;
+
 			default:
 				return super.onOptionsItemSelected( item );
 		}
+	}
+
+	private
+	void onActionSearch ()
+	{
+		Timber.d( "SEARCH!" );
+		recurseView( "", mBinding.toolbar );
+		//mBinding.toolbarSearch.setVisibility( View.VISIBLE );
 	}
 
 	private
@@ -272,10 +395,10 @@ class MainActivity extends BaseActivity
 	private static
 	class NavDestinationChangedListener implements NavController.OnDestinationChangedListener
 	{
-		private final ActionBar mToolbar;
+		private final MainActivity mActivity;
 
 		public
-		NavDestinationChangedListener ( final ActionBar toolbar ) {mToolbar = toolbar;}
+		NavDestinationChangedListener ( final MainActivity activity ) {mActivity = activity;}
 
 		@Override
 		public
@@ -284,23 +407,50 @@ class MainActivity extends BaseActivity
 				@Nullable final Bundle arguments )
 		{
 			int navId = destination.getId();
+			Toolbar toolbar = mActivity.mBinding.toolbar;
+
+			Iterator<NavDestination> it = controller.getGraph().iterator();
+			while ( it.hasNext() )
+			{
+				NavDestination dest = it.next();
+				if (dest.getId() == navId)
+				{
+					Timber.d( "selected dest: %s", dest.getLabel() );
+				}
+			}
+
+			if (mActivity.mSearchItem != null)
+			{
+				if ( navId == R.id.nav_toVaultListFragment || navId == R.id.nav_toCredentialListFragment )
+				{
+					mActivity.mSearchItem.setVisible( true );
+				}
+				else
+				{
+					mActivity.mSearchItem.setVisible( false );
+				}
+			}
+
 			if ( navId == R.id.nav_toLogin || navId == R.id.nav_toLoginClient
 					|| navId == R.id.nav_toLoginBasic
 				/*|| navId == R.id.nav_toLoginNCApp*/ )
 			{
-				mToolbar.hide();
+				Timber.d( "login page" );
+				toolbar.setVisibility( View.GONE );
 			}
 			else
 			{
-				mToolbar.show();
-				if (navId == R.id.nav_toVaultListFragment)
+				toolbar.setVisibility(View.VISIBLE);
+				if ( controller.getGraph().getStartDestination() == navId)
 				{
-					mToolbar.setDisplayHomeAsUpEnabled( false );
-					mToolbar.setDisplayShowHomeEnabled( true );
+					Timber.d( "go HOME!" );
+					toolbar.setNavigationIcon( R.drawable.ic_home );
+
+
 				}
 				else
 				{
-					mToolbar.setDisplayHomeAsUpEnabled( true );
+					Timber.d( "other page" );
 				}
 			}
 		}
