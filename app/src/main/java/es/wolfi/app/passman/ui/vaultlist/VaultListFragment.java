@@ -23,6 +23,7 @@ package es.wolfi.app.passman.ui.vaultlist;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,6 +32,7 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.snackbar.Snackbar;
 
@@ -58,7 +60,7 @@ import timber.log.Timber;
  * interface.
  */
 public
-class VaultListFragment extends BaseFragment implements OnListFragmentInteractionListener
+class VaultListFragment extends BaseFragment implements OnListFragmentInteractionListener, SwipeRefreshLayout.OnRefreshListener
 {
 	public static final String FRAG_TAG = "VAULT_LIST_FRAGMENT";
 
@@ -69,8 +71,7 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 	// TODO: Customize parameters
 	private int mColumnCount = 1;
 
-	private
-	FragmentVaultListBinding mBinding;
+	private FragmentVaultListBinding mBinding;
 
 	@Inject
 	PassmanApi mApi;
@@ -82,9 +83,9 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 
 	private RecyclerView mRecyclerView;
 
-	private
-	CompositeDisposable mDisposable = new CompositeDisposable();
+	private CompositeDisposable mDisposable = new CompositeDisposable();
 
+	private Handler mHandler;
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
 	 * fragment (e.g. upon screen orientation changes).
@@ -110,6 +111,8 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 	{
 		super.onCreate( savedInstanceState );
 
+		mHandler = new Handler();
+
 		Timber.d( "onCreate" );
 
 		if ( getArguments() != null )
@@ -124,7 +127,8 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 	View onCreateView (
 			LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
 	{
-		// TODO: logcat> TextInputLayout  I  EditText added is not a TextInputEditText. Please switch to using that class instead.
+		// TODO: logcat> TextInputLayout  I  EditText added is not a TextInputEditText. Please
+		//  switch to using that class instead.
 		mBinding = FragmentVaultListBinding.inflate( inflater, container, false );
 		View view = mBinding.getRoot();
 
@@ -132,20 +136,19 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 
 		Timber.d( "onCreateView: setup view!" );
 		// Set the adapter
-//		if ( view instanceof RecyclerView )
-//		{
-			Context context = view.getContext();
-			//mRecyclerView = (RecyclerView) view;
+		Context context = view.getContext();
+		//mRecyclerView = (RecyclerView) view;
 
-			if ( mColumnCount <= 1 )
-			{
-				mRecyclerView.setLayoutManager( new LinearLayoutManager( context ) );
-			}
-			else
-			{
-				mRecyclerView.setLayoutManager( new GridLayoutManager( context, mColumnCount ) );
-			}
-	//	}
+		if ( mColumnCount <= 1 )
+		{
+			mRecyclerView.setLayoutManager( new LinearLayoutManager( context ) );
+		}
+		else
+		{
+			mRecyclerView.setLayoutManager( new GridLayoutManager( context, mColumnCount ) );
+		}
+
+		mBinding.vaultListSwipeRefresh.setOnRefreshListener(this);
 
 		return view;
 	}
@@ -173,17 +176,37 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 
 		Timber.d( "onResume!" );
 
-		if ( mDataStore.getNumVaults() < 1 )
+		updateVaults();
+	}
+
+	private
+	void updateVaults()
+	{
+		updateVaults( false );
+	}
+
+	// TODO: check for last check time.
+	//  if its been more than X minutes since last fetch, fetch again.
+	private
+	void updateVaults(boolean force)
+	{
+		if ( force || mDataStore.getNumVaults() < 1 )
 		{
-			// no vaults
+			// no vaults or forced
+
+			mBinding.vaultListSwipeRefresh.setRefreshing( true );
+
 			if ( mListVaultsSingle == null )
 			{
-				Timber.d( "no vaults, fetch" );
+				// fetch isn't already in progress
+
+				Timber.d( "fetch vaults" );
 
 				// request list of vaults
 				mListVaultsSingle = mApi.listVaults().observeOn( AndroidSchedulers.mainThread() );
-				mDisposable.add( mListVaultsSingle.subscribeWith(
-						new ListVaultsDisposableObserver() ));
+
+				mDisposable.add(
+						mListVaultsSingle.subscribeWith( new ListVaultsDisposableObserver() ) );
 			}
 		}
 		else
@@ -210,12 +233,14 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 
 		VaultViewAdapter adapter = new VaultViewAdapter( vaultList, this );
 		mRecyclerView.setAdapter( adapter );
+
+		mBinding.vaultListSwipeRefresh.setRefreshing( false );
 	}
 
 	private
 	void onVaultListSuccess ( final List< Vault > body )
 	{
-		mDataStore.putVaults(body);
+		mDataStore.putVaults( body );
 		updateList();
 	}
 
@@ -226,7 +251,7 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 		mDataStore.setActiveVault( vault );
 
 		String vaultPass = mDataStore.getVaultPassword( vault );
-		if ( vaultPass != null && vault.unlock(vaultPass) )
+		if ( vaultPass != null && vault.unlock( vaultPass ) )
 		{
 			Timber.d( "vault already unlocked" );
 			showVault();
@@ -247,7 +272,7 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 		Bundle args = new Bundle();
 		args.putString( "vault_name", activeVault.name );
 
-		Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
+		Navigation.findNavController( requireActivity(), R.id.nav_host_fragment )
 				.navigate( R.id.nav_vlist_to_vault_unlock, args );
 	}
 
@@ -260,10 +285,16 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 		Bundle args = new Bundle();
 		args.putString( "vault_name", activeVault.name );
 
-		Navigation.findNavController(requireActivity(), R.id.nav_host_fragment)
+		Navigation.findNavController( requireActivity(), R.id.nav_host_fragment )
 				.navigate( R.id.nav_vlist_to_credential_list, args );
 	}
 
+	@Override
+	public
+	void onRefresh ()
+	{
+		updateVaults( true );
+	}
 
 	private
 	class ListVaultsDisposableObserver extends DisposableSingleObserver< List< Vault > >
@@ -275,16 +306,17 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 		{
 			Timber.d( "listVaults success!" );
 			onVaultListSuccess( vaultMap );
+			mListVaultsSingle = null;
 		}
 
 		@Override
 		public
 		void onError ( final Throwable e )
 		{
-			if (e instanceof HttpException )
+			if ( e instanceof HttpException )
 			{
 				HttpException httpException = (HttpException) e;
-				if( httpException.code() == 403 )
+				if ( httpException.code() == 403 )
 				{
 					// not authenticated...
 
