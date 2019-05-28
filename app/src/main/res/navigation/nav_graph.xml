@@ -87,7 +87,7 @@
         android:id="@+id/nav_toCredentialListFragment"
         android:name="es.wolfi.app.passman.ui.vault.CredentialListFragment"
         android:label="Credentials in {vault_name}"
-        tools:layout="@layout/fragment_credential_item_list">
+        tools:layout="@layout/fragment_credential_list">
         <action
             android:id="@+id/nav_clist_to_cred"
             app:destination="@id/nav_toCredentialFragment" />
