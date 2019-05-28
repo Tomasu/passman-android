@@ -2,6 +2,7 @@ package es.wolfi.app.passman.dagger;
 
 import android.accounts.AccountManager;
 import android.app.Application;
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 
@@ -40,6 +41,14 @@ class ApplicationModule
 	@ContributesAndroidInjector
 	abstract
 	MainActivity contributePasswordListInjector ();
+
+	@Provides
+	@Singleton
+	static
+	SearchManager provideSearchManager( @GlobalContext Context context )
+	{
+		return (SearchManager) context.getSystemService( Context.SEARCH_SERVICE );
+	}
 
 	@Provides
 	@Singleton

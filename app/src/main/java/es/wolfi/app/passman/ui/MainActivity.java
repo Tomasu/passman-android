@@ -35,8 +35,6 @@ import android.widget.Toast;
 import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.AppCompatImageButton;
-import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
@@ -259,77 +257,6 @@ class MainActivity extends BaseActivity
 		// Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate( R.menu.menu_password_list, menu );
 
-		mSearchItem = menu.findItem( R.id.action_search );
-		SearchView searchView = (SearchView) mSearchItem.getActionView();
-
-		//searchView.setBackgroundColor( getResources().getColor( R.color.pressed_color ) );
-
-
-		searchView.setOnSearchClickListener( new View.OnClickListener() {
-			@Override
-			public
-			void onClick ( final View v )
-			{
-				Timber.d( "on search click!" );
-				recurseView( "", mBinding.toolbar );
-
-				for ( int i = 0; i < mBinding.toolbar.getChildCount(); i++ )
-				{
-					View vv = mBinding.toolbar.getChildAt( i );
-					if ( vv instanceof AppCompatImageButton )
-					{
-						int curDest = mNavController.getCurrentDestination().getId();
-						if (mNavController.getGraph().getStartDestination() == curDest)
-						{
-							// got the home/back button
-							// set it to the home icon since we don't want it
-							// to be the back button when at the home screen
-
-							Timber.d( "cur dest: %s", getResources().getResourceName( curDest ) );
-							AppCompatImageButton imageButton = (AppCompatImageButton) vv;
-							imageButton.setImageResource( R.drawable.ic_home );
-							break;
-						}
-					}
-				}
-			}
-		} );
-
-		searchView.setOnCloseListener( new SearchView.OnCloseListener() {
-			@Override
-			public
-			boolean onClose ()
-			{
-				Timber.d( "search closed!" );
-				return false;
-			}
-		} );
-
-		searchView.setOnQueryTextListener( new SearchView.OnQueryTextListener() {
-			@Override
-			public
-			boolean onQueryTextSubmit ( final String query )
-			{
-				Timber.d( "text submit: %s", query );
-				if (!searchView.isIconified())
-				{
-					searchView.setIconified( true );
-				}
-
-				searchView.setQuery( query, false );
-				//searchItem.collapseActionView();
-				return false;
-			}
-
-			@Override
-			public
-			boolean onQueryTextChange ( final String newText )
-			{
-				Timber.d( "text change: %s", newText );
-				return false;
-			}
-		} );
-
 		return true;
 	}
 
@@ -356,21 +283,9 @@ class MainActivity extends BaseActivity
 				onLogoutPressed();
 				return true;
 
-//			case R.id.action_search:
-//				onActionSearch();
-//				return true;
-
 			default:
 				return super.onOptionsItemSelected( item );
 		}
-	}
-
-	private
-	void onActionSearch ()
-	{
-		Timber.d( "SEARCH!" );
-		recurseView( "", mBinding.toolbar );
-		//mBinding.toolbarSearch.setVisibility( View.VISIBLE );
 	}
 
 	private
@@ -383,7 +298,6 @@ class MainActivity extends BaseActivity
 		NavOptions navOptions = new NavOptions.Builder()
 				.setPopUpTo( R.id.nav_toVaultListFragment, true ).build();
 		mNavController.navigate( R.id.nav_toLogin, null, navOptions );
-		//LoginActivity.launch( this, null );
 	}
 
 	private
@@ -445,8 +359,6 @@ class MainActivity extends BaseActivity
 				{
 					Timber.d( "go HOME!" );
 					toolbar.setNavigationIcon( R.drawable.ic_home );
-
-
 				}
 				else
 				{

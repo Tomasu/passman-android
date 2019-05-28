@@ -24,9 +24,10 @@ package es.wolfi.utils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class ListUtils {
-    public static <T extends Filterable> ArrayList<T> filterList(String filter, ArrayList<T> list){
+    public static <T extends Filterable> List<T> filterList ( String filter, List<T> list ){
         ArrayList<T> copiedList = new ArrayList<T>(list);
         Iterator<T> it = copiedList.iterator();
         while (it.hasNext()) {

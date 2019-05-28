@@ -21,11 +21,12 @@
 package es.wolfi.app.passman.ui.vault;
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -44,7 +45,7 @@ import javax.inject.Inject;
 import es.wolfi.app.passman.DataStore;
 import es.wolfi.app.passman.R;
 import es.wolfi.app.passman.databinding.FragmentCredentialListBinding;
-import es.wolfi.app.passman.ui.BaseFragment;
+import es.wolfi.app.passman.ui.SearchableFragment;
 import es.wolfi.passman.API.Credential;
 import es.wolfi.passman.API.PassmanApi;
 import es.wolfi.passman.API.Vault;
@@ -56,6 +57,8 @@ import io.reactivex.observers.DisposableSingleObserver;
 import retrofit2.HttpException;
 import timber.log.Timber;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * A fragment representing a list of Items.
  * <p/>
@@ -64,8 +67,8 @@ import timber.log.Timber;
  * interface.
  */
 public
-class CredentialListFragment extends BaseFragment
-		implements OnCredentialListFragmentInteractionListener
+class CredentialListFragment extends SearchableFragment
+		implements OnCredentialListFragmentInteractionListener, FilterListAsyncTask.OnListFilteredListener<Credential>
 {
 	public static final String FRAG_TAG = "CREDENTIAL_LIST_FRAGMENT";
 
@@ -73,7 +76,7 @@ class CredentialListFragment extends BaseFragment
 	private static final String ARG_COLUMN_COUNT = "column-count";
 	// TODO: Customize parameters
 	private int mColumnCount = 1;
-	private AsyncTask filterTask = null;
+	private FilterListAsyncTask<Credential> filterTask = null;
 
 	private Vault mVault = null;
 
@@ -86,7 +89,7 @@ class CredentialListFragment extends BaseFragment
 	private FragmentCredentialListBinding mBinding;
 
 	private CompositeDisposable mDisposable = new CompositeDisposable();
-	private Single< Vault > mGetVaultObservable;
+	private Single< Vault > mGetVaultObservable = null;
 
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
@@ -152,42 +155,9 @@ class CredentialListFragment extends BaseFragment
 
 		mBinding.credentialListSwipeLayout.setOnRefreshListener( () -> updateVault( true ) );
 
-		mBinding.searchInput.addTextChangedListener( new TextWatcher()
-		{
-			@Override
-			public
-			void beforeTextChanged ( CharSequence charSequence, int i, int i1, int i2 )
-			{
-
-			}
-
-			@Override
-			public
-			void onTextChanged ( CharSequence charSequence, int i, int i1, int i2 )
-			{
-				String searchText = mBinding.searchInput.getText().toString().toLowerCase();
-				if ( filterTask != null )
-				{
-					filterTask.cancel( true );
-				}
-				filterTask = new FilterListAsyncTask( searchText, mBinding.list,
-																  CredentialListFragment.this );
-				ArrayList< Credential > input[] = new ArrayList[] { mVault.getCredentials() };
-				filterTask.execute( (Object[]) input );
-			}
-
-			@Override
-			public
-			void afterTextChanged ( Editable editable )
-			{
-
-			}
-		} );
-
-		mBinding.list.setAdapter( new CredentialViewAdapter( mVault.getCredentials(), this ) );
-
 		return view;
 	}
+
 
 	@Override
 	public
@@ -217,12 +187,23 @@ class CredentialListFragment extends BaseFragment
 	private
 	void updateVault(boolean force)
 	{
+		Timber.d( "updateVault: force=%s", force );
+
 		if ( mVault != null )
 		{
 			// TODO: limit automatic refreshes to one every X minutes.
 
-			if (force || mGetVaultObservable == null)
+			if (force && mGetVaultObservable != null)
 			{
+				Timber.d( "forced and observable not null! dispose!" );
+				mDisposable.clear();
+				mGetVaultObservable = null;
+			}
+
+			if (mGetVaultObservable == null)
+			{
+				Timber.d( "no existing observable" );
+
 				List< Credential > credentials = mVault.getCredentials();
 				//Timber.d( "credentials: %s", credentials );
 
@@ -237,9 +218,14 @@ class CredentialListFragment extends BaseFragment
 				}
 				else
 				{
-					//				Credential secondCred = mVault.getCredentials().get( 1 );
-					//				Timber.d( "second cred email: %s", secondCred.getEmail() );
+					Timber.d( "have cached credentials" );
+					updateList( credentials );
 				}
+			}
+			else
+			{
+				Timber.d( "have existing observable.. possibly waiting for api?" );
+				updateList( mVault.getCredentials() );
 			}
 		}
 		else
@@ -247,6 +233,35 @@ class CredentialListFragment extends BaseFragment
 			Snackbar.make( mBinding.list, "Active vault not set?!", Snackbar.LENGTH_LONG ).show();
 			Navigation.findNavController( requireActivity(), R.id.nav_host_fragment ).navigateUp();
 		}
+	}
+
+	private
+	void updateRecyclerView ( @NonNull List< Credential > credentialList )
+	{
+		Timber.d( "updateRecyclerView: %d", credentialList.size() );
+		CredentialViewAdapter adapter = new CredentialViewAdapter( credentialList, this );
+		mBinding.list.setAdapter( adapter );
+	}
+
+	private
+	void updateList(@NonNull List<Credential> credentialList)
+	{
+		checkNotNull( credentialList, "Null credentialList?!" );
+
+		Timber.d( "update list: %d items", credentialList.size() );
+
+		if ( isSearchOpen() && !getQueryString().isEmpty() )
+		{
+			Timber.d( "search open and query not empty, do filter!" );
+			runFilter( getQueryString() );
+		}
+		else
+		{
+			Timber.d( "update unfiltered!" );
+			updateRecyclerView( credentialList );
+			mBinding.credentialListSwipeLayout.setRefreshing( false );
+		}
+
 	}
 
 	@Override
@@ -279,7 +294,7 @@ class CredentialListFragment extends BaseFragment
 	}
 
 	private
-	void onRefreshSuccess (@NonNull Vault vault )
+	void onVaultGetSuccess ( @NonNull Vault vault )
 	{
 		mDataStore.putVault( vault.guid, vault );
 		mDataStore.setActiveVault( vault );
@@ -297,12 +312,59 @@ class CredentialListFragment extends BaseFragment
 		//			Credential secondCred = mVault.getCredentials().get( 1 );
 		//			Timber.d( "second cred email: %s", secondCred.getEmail() );
 
-		mBinding.list.setAdapter(
-				new CredentialViewAdapter( mVault.getCredentials(), CredentialListFragment.this ) );
+		updateList( vault.getCredentials() );
+	}
+
+	@Override
+	public
+	void onListFiltered (
+			@NonNull final List< Credential > filteredList )
+	{
+		Timber.d( "onListFiltered: Credential!" );
+		updateRecyclerView( filteredList );
 
 		mBinding.credentialListSwipeLayout.setRefreshing( false );
+	}
 
-		mGetVaultObservable = null;
+	@Override
+	protected
+	void onSearchTextSubmit ( final String query )
+	{
+		Timber.d( "onSearchTextSubmit: %s", query );
+	}
+
+	@Override
+	protected
+	void onSearchTextChange ( final String query )
+	{
+		Timber.d( "onSearchTextChange: %s", query );
+
+		runFilter( query );
+	}
+
+	private
+	void runFilter(@NonNull String query)
+	{
+		String searchText = query.toLowerCase();
+		if ( filterTask != null )
+		{
+			filterTask.cancel( true );
+		}
+
+		filterTask = new FilterListAsyncTask< Credential >( searchText, CredentialListFragment.this );
+
+		getLifecycle().addObserver( filterTask );
+
+		ArrayList< Credential > input[] = new ArrayList[] { mVault.getCredentials() };
+		filterTask.execute( input );
+	}
+
+	@Override
+	public
+	void onCreateOptionsMenu (
+			@NonNull final Menu menu, @NonNull final MenuInflater inflater )
+	{
+		setupMenu( menu, inflater, R.menu.menu_credential_list );
 	}
 
 	private
@@ -312,7 +374,8 @@ class CredentialListFragment extends BaseFragment
 		public
 		void onSuccess ( final Vault vault )
 		{
-			onRefreshSuccess( vault );
+			onVaultGetSuccess( vault );
+			mGetVaultObservable = null;
 		}
 
 		@Override
@@ -342,6 +405,31 @@ class CredentialListFragment extends BaseFragment
 			}
 
 			Navigation.findNavController( requireActivity(), R.id.nav_host_fragment ).navigateUp();
+		}
+	}
+
+	private
+	class SearchTextWatcher implements TextWatcher
+	{
+		@Override
+		public
+		void beforeTextChanged ( CharSequence charSequence, int i, int i1, int i2 )
+		{
+			Timber.d( "beforeTextChanged" );
+		}
+
+		@Override
+		public
+		void onTextChanged ( CharSequence charSequence, int i, int i1, int i2 )
+		{
+
+		}
+
+		@Override
+		public
+		void afterTextChanged ( Editable editable )
+		{
+
 		}
 	}
 }

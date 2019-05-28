@@ -25,9 +25,12 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -43,15 +46,18 @@ import javax.inject.Inject;
 import es.wolfi.app.passman.DataStore;
 import es.wolfi.app.passman.R;
 import es.wolfi.app.passman.databinding.FragmentVaultListBinding;
-import es.wolfi.app.passman.ui.BaseFragment;
+import es.wolfi.app.passman.ui.SearchableFragment;
 import es.wolfi.passman.API.PassmanApi;
 import es.wolfi.passman.API.Vault;
+import es.wolfi.utils.FilterListAsyncTask;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableSingleObserver;
 import retrofit2.HttpException;
 import timber.log.Timber;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A fragment representing a list of Items.
@@ -60,7 +66,9 @@ import timber.log.Timber;
  * interface.
  */
 public
-class VaultListFragment extends BaseFragment implements OnListFragmentInteractionListener, SwipeRefreshLayout.OnRefreshListener
+class VaultListFragment extends SearchableFragment
+		implements OnListFragmentInteractionListener, SwipeRefreshLayout.OnRefreshListener,
+					  FilterListAsyncTask.OnListFilteredListener< Vault>
 {
 	public static final String FRAG_TAG = "VAULT_LIST_FRAGMENT";
 
@@ -86,6 +94,9 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 	private CompositeDisposable mDisposable = new CompositeDisposable();
 
 	private Handler mHandler;
+
+	private FilterListAsyncTask<Vault> filterTask = null;
+
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
 	 * fragment (e.g. upon screen orientation changes).
@@ -211,7 +222,7 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 		}
 		else
 		{
-			updateList();
+			updateList(mDataStore.getVaults());
 		}
 	}
 
@@ -225,23 +236,36 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 	}
 
 	private
-	void updateList ()
+	void updateRecyclerView ( @NonNull List< Vault > vaultList )
 	{
-		List< Vault > vaultList = mDataStore.getVaults();
+		VaultViewAdapter adapter = new VaultViewAdapter( vaultList, this );
+		mRecyclerView.setAdapter( adapter );
+	}
+
+	private
+	void updateList (@NonNull List<Vault> vaultList)
+	{
+		checkNotNull( vaultList, "Null vaultList?!" );
 
 		Timber.d( "update list: %d items", vaultList.size() );
 
-		VaultViewAdapter adapter = new VaultViewAdapter( vaultList, this );
-		mRecyclerView.setAdapter( adapter );
+		if (isSearchOpen() && !getQueryString().isEmpty())
+		{
+			runFilter( getQueryString() );
+		}
+		else
+		{
+			updateRecyclerView( vaultList );
+			mBinding.vaultListSwipeRefresh.setRefreshing( false );
+		}
 
-		mBinding.vaultListSwipeRefresh.setRefreshing( false );
 	}
 
 	private
 	void onVaultListSuccess ( final List< Vault > body )
 	{
 		mDataStore.putVaults( body );
-		updateList();
+		updateList(body);
 	}
 
 	@Override
@@ -296,16 +320,66 @@ class VaultListFragment extends BaseFragment implements OnListFragmentInteractio
 		updateVaults( true );
 	}
 
+	@Override
+	protected
+	void onSearchTextSubmit ( final String query )
+	{
+		Timber.d( "onSearchTextSubmit: %s", query );
+	}
+
+	@Override
+	protected
+	void onSearchTextChange ( final String query )
+	{
+		Timber.d( "onSearchTextChange: %s", query );
+
+		runFilter( query );
+	}
+
+	protected
+	void runFilter ( @NonNull String query )
+	{
+		String searchText = checkNotNull( query, "Null query?!" ).toLowerCase();
+		if ( filterTask != null )
+		{
+			filterTask.cancel( true );
+		}
+
+		filterTask = new FilterListAsyncTask<>( searchText, this );
+		getLifecycle().addObserver( filterTask );
+
+		List< Vault > input[] = new List[] { mDataStore.getVaults() };
+		filterTask.execute( input );
+	}
+
+	@Override
+	public
+	void onCreateOptionsMenu (
+			@NonNull final Menu menu, @NonNull final MenuInflater inflater )
+	{
+		setupMenu( menu, inflater, R.menu.menu_vault_list );
+	}
+
+	@Override
+	public
+	void onListFiltered ( @NonNull final List< Vault > filteredList )
+	{
+		Timber.d( "onListFiltered: VaultList!" );
+		updateRecyclerView( filteredList );
+
+		mBinding.vaultListSwipeRefresh.setRefreshing( false );
+	}
+
 	private
 	class ListVaultsDisposableObserver extends DisposableSingleObserver< List< Vault > >
 	{
 		@Override
 		public
 		void onSuccess (
-				final List< Vault > vaultMap )
+				final List< Vault > vaultList )
 		{
 			Timber.d( "listVaults success!" );
-			onVaultListSuccess( vaultMap );
+			onVaultListSuccess( vaultList );
 			mListVaultsSingle = null;
 		}
 
