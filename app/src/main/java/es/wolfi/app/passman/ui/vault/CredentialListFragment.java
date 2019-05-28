@@ -29,10 +29,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.snackbar.Snackbar;
 
@@ -86,6 +86,7 @@ class CredentialListFragment extends BaseFragment
 	private FragmentCredentialListBinding mBinding;
 
 	private CompositeDisposable mDisposable = new CompositeDisposable();
+	private Single< Vault > mGetVaultObservable;
 
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
@@ -149,15 +150,7 @@ class CredentialListFragment extends BaseFragment
 			return view;
 		}
 
-		mBinding.credentialListSwipeLayout.setOnRefreshListener(
-				new SwipeRefreshLayout.OnRefreshListener() {
-					@Override
-					public
-					void onRefresh ()
-					{
-						Timber.d( "BOO" );
-					}
-				} );
+		mBinding.credentialListSwipeLayout.setOnRefreshListener( () -> updateVault( true ) );
 
 		mBinding.searchInput.addTextChangedListener( new TextWatcher()
 		{
@@ -212,25 +205,41 @@ class CredentialListFragment extends BaseFragment
 
 		mVault = mDataStore.getActiveVault();
 
+		updateVault();
+	}
+
+	private
+	void updateVault()
+	{
+		updateVault( false );
+	}
+
+	private
+	void updateVault(boolean force)
+	{
 		if ( mVault != null )
 		{
-			List< Credential > credentials = mVault.getCredentials();
-			//Timber.d( "credentials: %s", credentials );
+			// TODO: limit automatic refreshes to one every X minutes.
 
-			if ( credentials == null || credentials.size() < 1 )
+			if (force || mGetVaultObservable == null)
 			{
-				Timber.d( "credentials null or empty?!" );
+				List< Credential > credentials = mVault.getCredentials();
+				//Timber.d( "credentials: %s", credentials );
 
-				Single< Vault > getVaultObservable = mApi.getVault( mVault.guid )
-						.observeOn( AndroidSchedulers.mainThread() );
+				if ( force || credentials == null || credentials.size() < 1 )
+				{
+					Timber.d( "credentials null or empty?!" );
 
-				mDisposable.add(
-						getVaultObservable.subscribeWith( new VaultDisposableSingleObserver() ) );
-			}
-			else
-			{
-				//				Credential secondCred = mVault.getCredentials().get( 1 );
-				//				Timber.d( "second cred email: %s", secondCred.getEmail() );
+					mGetVaultObservable = mApi.getVault( mVault.guid )
+							.observeOn( AndroidSchedulers.mainThread() );
+
+					mDisposable.add( mGetVaultObservable.subscribeWith( new VaultDisposableSingleObserver() ) );
+				}
+				else
+				{
+					//				Credential secondCred = mVault.getCredentials().get( 1 );
+					//				Timber.d( "second cred email: %s", secondCred.getEmail() );
+				}
 			}
 		}
 		else
@@ -270,30 +279,40 @@ class CredentialListFragment extends BaseFragment
 	}
 
 	private
+	void onRefreshSuccess (@NonNull Vault vault )
+	{
+		mDataStore.putVault( vault.guid, vault );
+		mDataStore.setActiveVault( vault );
+		mVault = vault;
+
+		if ( !vault.unlock( mDataStore.getVaultPassword( vault ) ) )
+		{
+			Timber.e( "failed to (re)unlock vault?!?!" );
+		}
+		else
+		{
+			Timber.d( "vault re-unlocked!" );
+		}
+
+		//			Credential secondCred = mVault.getCredentials().get( 1 );
+		//			Timber.d( "second cred email: %s", secondCred.getEmail() );
+
+		mBinding.list.setAdapter(
+				new CredentialViewAdapter( mVault.getCredentials(), CredentialListFragment.this ) );
+
+		mBinding.credentialListSwipeLayout.setRefreshing( false );
+
+		mGetVaultObservable = null;
+	}
+
+	private
 	class VaultDisposableSingleObserver extends DisposableSingleObserver< Vault >
 	{
 		@Override
 		public
 		void onSuccess ( final Vault vault )
 		{
-			mDataStore.putVault( vault.guid, vault );
-			mDataStore.setActiveVault( vault );
-			mVault = vault;
-
-			if ( !vault.unlock( mDataStore.getVaultPassword( vault ) ) )
-			{
-				Timber.e( "failed to (re)unlock vault?!?!" );
-			}
-			else
-			{
-				Timber.d( "vault re-unlocked!" );
-			}
-
-			//			Credential secondCred = mVault.getCredentials().get( 1 );
-			//			Timber.d( "second cred email: %s", secondCred.getEmail() );
-
-			mBinding.list.setAdapter(
-					new CredentialViewAdapter( mVault.getCredentials(), CredentialListFragment.this ) );
+			onRefreshSuccess( vault );
 		}
 
 		@Override
