@@ -28,15 +28,21 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/list"
-            android:name="es.wolfi.app.passman.VaultFragment"
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/vault_list_swipe_refresh"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="0dp"
-            android:layout_marginRight="0dp"
-            app:layoutManager="LinearLayoutManager"
-            tools:context="es.wolfi.app.passman.ui.vaultlist.VaultListFragment"
-            tools:listitem="@layout/fragment_vault" />
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/list"
+                android:name="es.wolfi.app.passman.VaultFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="0dp"
+                android:layout_marginRight="0dp"
+                app:layoutManager="LinearLayoutManager"
+                tools:context="es.wolfi.app.passman.ui.vaultlist.VaultListFragment"
+                tools:listitem="@layout/fragment_vault" />
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
     </LinearLayout>
 </layout>

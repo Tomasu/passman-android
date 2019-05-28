@@ -28,12 +28,11 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.snackbar.Snackbar;
 
@@ -44,7 +43,7 @@ import javax.inject.Inject;
 
 import es.wolfi.app.passman.DataStore;
 import es.wolfi.app.passman.R;
-import es.wolfi.app.passman.databinding.FragmentCredentialItemListBinding;
+import es.wolfi.app.passman.databinding.FragmentCredentialListBinding;
 import es.wolfi.app.passman.ui.BaseFragment;
 import es.wolfi.passman.API.Credential;
 import es.wolfi.passman.API.PassmanApi;
@@ -60,7 +59,8 @@ import timber.log.Timber;
 /**
  * A fragment representing a list of Items.
  * <p/>
- * Activities containing this fragment MUST implement the {@link OnCredentialListFragmentInteractionListener}
+ * Activities containing this fragment MUST implement the
+ * {@link OnCredentialListFragmentInteractionListener}
  * interface.
  */
 public
@@ -83,7 +83,7 @@ class CredentialListFragment extends BaseFragment
 	@Inject
 	PassmanApi mApi;
 
-	private FragmentCredentialItemListBinding mBinding;
+	private FragmentCredentialListBinding mBinding;
 
 	private CompositeDisposable mDisposable = new CompositeDisposable();
 
@@ -125,68 +125,73 @@ class CredentialListFragment extends BaseFragment
 	View onCreateView (
 			LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState )
 	{
-		mBinding = FragmentCredentialItemListBinding.inflate( inflater, container, false );
+		mBinding = FragmentCredentialListBinding.inflate( inflater, container, false );
 
 		View view = mBinding.getRoot();
 
 		// Set the adapter
-		View credentialView = view.findViewById( R.id.list );
-		if ( credentialView instanceof RecyclerView )
+		Context context = mBinding.list.getContext();
+
+		if ( mColumnCount <= 1 )
 		{
-			Context context = credentialView.getContext();
-
-			if ( mColumnCount <= 1 )
-			{
-				mBinding.list.setLayoutManager( new LinearLayoutManager( context ) );
-			}
-			else
-			{
-				mBinding.list.setLayoutManager( new GridLayoutManager( context, mColumnCount ) );
-			}
-
-			mVault = mDataStore.getActiveVault();
-			if (mVault == null)
-			{
-				Snackbar.make( container, "No active vault?!", Snackbar.LENGTH_LONG ).show();
-				Navigation.findNavController(requireActivity(), R.id.nav_host_fragment).navigateUp();
-				return view;
-			}
-
-			final EditText searchInput = (EditText) view.findViewById( R.id.search_input );
-
-			mBinding.searchInput.addTextChangedListener( new TextWatcher()
-			{
-				@Override
-				public
-				void beforeTextChanged ( CharSequence charSequence, int i, int i1, int i2 )
-				{
-
-				}
-
-				@Override
-				public
-				void onTextChanged ( CharSequence charSequence, int i, int i1, int i2 )
-				{
-					String searchText = searchInput.getText().toString().toLowerCase();
-					if ( filterTask != null )
-					{
-						filterTask.cancel( true );
-					}
-					filterTask = new FilterListAsyncTask( searchText, mBinding.list, CredentialListFragment.this );
-					ArrayList< Credential > input[] = new ArrayList[] { mVault.getCredentials() };
-					filterTask.execute( (Object[]) input );
-				}
-
-				@Override
-				public
-				void afterTextChanged ( Editable editable )
-				{
-
-				}
-			} );
-
-			mBinding.list.setAdapter( new CredentialViewAdapter( mVault.getCredentials(), this ) );
+			mBinding.list.setLayoutManager( new LinearLayoutManager( context ) );
 		}
+		else
+		{
+			mBinding.list.setLayoutManager( new GridLayoutManager( context, mColumnCount ) );
+		}
+
+		mVault = mDataStore.getActiveVault();
+		if ( mVault == null )
+		{
+			Snackbar.make( container, "No active vault?!", Snackbar.LENGTH_LONG ).show();
+			Navigation.findNavController( requireActivity(), R.id.nav_host_fragment ).navigateUp();
+			return view;
+		}
+
+		mBinding.credentialListSwipeLayout.setOnRefreshListener(
+				new SwipeRefreshLayout.OnRefreshListener() {
+					@Override
+					public
+					void onRefresh ()
+					{
+						Timber.d( "BOO" );
+					}
+				} );
+
+		mBinding.searchInput.addTextChangedListener( new TextWatcher()
+		{
+			@Override
+			public
+			void beforeTextChanged ( CharSequence charSequence, int i, int i1, int i2 )
+			{
+
+			}
+
+			@Override
+			public
+			void onTextChanged ( CharSequence charSequence, int i, int i1, int i2 )
+			{
+				String searchText = mBinding.searchInput.getText().toString().toLowerCase();
+				if ( filterTask != null )
+				{
+					filterTask.cancel( true );
+				}
+				filterTask = new FilterListAsyncTask( searchText, mBinding.list,
+																  CredentialListFragment.this );
+				ArrayList< Credential > input[] = new ArrayList[] { mVault.getCredentials() };
+				filterTask.execute( (Object[]) input );
+			}
+
+			@Override
+			public
+			void afterTextChanged ( Editable editable )
+			{
+
+			}
+		} );
+
+		mBinding.list.setAdapter( new CredentialViewAdapter( mVault.getCredentials(), this ) );
 
 		return view;
 	}
@@ -224,14 +229,13 @@ class CredentialListFragment extends BaseFragment
 			}
 			else
 			{
-//				Credential secondCred = mVault.getCredentials().get( 1 );
-//				Timber.d( "second cred email: %s", secondCred.getEmail() );
+				//				Credential secondCred = mVault.getCredentials().get( 1 );
+				//				Timber.d( "second cred email: %s", secondCred.getEmail() );
 			}
 		}
 		else
 		{
-			Snackbar.make( mBinding.list, "Active vault not set?!", Snackbar.LENGTH_LONG )
-					.show();
+			Snackbar.make( mBinding.list, "Active vault not set?!", Snackbar.LENGTH_LONG ).show();
 			Navigation.findNavController( requireActivity(), R.id.nav_host_fragment ).navigateUp();
 		}
 	}
@@ -276,7 +280,7 @@ class CredentialListFragment extends BaseFragment
 			mDataStore.setActiveVault( vault );
 			mVault = vault;
 
-			if (!vault.unlock( mDataStore.getVaultPassword( vault ) ))
+			if ( !vault.unlock( mDataStore.getVaultPassword( vault ) ) )
 			{
 				Timber.e( "failed to (re)unlock vault?!?!" );
 			}
@@ -285,10 +289,11 @@ class CredentialListFragment extends BaseFragment
 				Timber.d( "vault re-unlocked!" );
 			}
 
-//			Credential secondCred = mVault.getCredentials().get( 1 );
-//			Timber.d( "second cred email: %s", secondCred.getEmail() );
+			//			Credential secondCred = mVault.getCredentials().get( 1 );
+			//			Timber.d( "second cred email: %s", secondCred.getEmail() );
 
-			mBinding.list.setAdapter( new CredentialViewAdapter( mVault.getCredentials(), CredentialListFragment.this ) );
+			mBinding.list.setAdapter(
+					new CredentialViewAdapter( mVault.getCredentials(), CredentialListFragment.this ) );
 		}
 
 		@Override
@@ -301,21 +306,20 @@ class CredentialListFragment extends BaseFragment
 			{
 				HttpException httpException = (HttpException) e;
 
-				if (httpException.code() == 403)
+				if ( httpException.code() == 403 )
 				{
-					Snackbar.make( mBinding.list, "Not authenticated!", Snackbar.LENGTH_LONG )
-							.show();
+					Snackbar.make( mBinding.list, "Not authenticated!", Snackbar.LENGTH_LONG ).show();
 				}
 				else
 				{
-					Snackbar.make( mBinding.list, "Request failed: " + httpException.message(), Snackbar.LENGTH_LONG )
-							.show();
+					Snackbar.make( mBinding.list, "Request failed: " + httpException.message(),
+										Snackbar.LENGTH_LONG ).show();
 				}
 			}
 			else
 			{
-				Snackbar.make( mBinding.list, "unexpected error: " + e.getMessage(), Snackbar.LENGTH_LONG )
-						.show();
+				Snackbar.make( mBinding.list, "unexpected error: " + e.getMessage(),
+									Snackbar.LENGTH_LONG ).show();
 			}
 
 			Navigation.findNavController( requireActivity(), R.id.nav_host_fragment ).navigateUp();
